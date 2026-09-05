@@ -67,7 +67,7 @@ def test_cross_batch_duplicate_reuses_completed_evidence_without_requeue(
     second = create_batch(database_path)
     upload(client, first["id"], png_bytes)
     claimed = claim_next_queued_evidence(database_path)
-    mark_evidence_completed(database_path, claimed["id"])
+    mark_evidence_completed(database_path, claimed["id"], attempt_count=claimed["attempt_count"])
     upload(client, second["id"], png_bytes, "另一个文件名.png")
     with connect_database(database_path) as connection:
         assert connection.execute("SELECT COUNT(*) FROM evidence").fetchone()[0] == 1

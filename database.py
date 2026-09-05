@@ -508,6 +508,7 @@ def attach_uploaded_evidence(
 
 
 def claim_next_queued_evidence(database_path: str | Path) -> dict[str, Any] | None:
+    """Claim atomically; retain the returned attempt_count for terminal updates."""
     with database_connection(database_path) as connection:
         connection.execute("BEGIN IMMEDIATE")
         try:
@@ -550,10 +551,13 @@ def claim_next_queued_evidence(database_path: str | Path) -> dict[str, Any] | No
 
 
 def _mark_evidence(
-    database_path: str | Path, evidence_id: int, status: str, error_message: str | None
+    database_path: str | Path, evidence_id: int, status: str, error_message: str | None,
+    *, attempt_count: int,
 ) -> None:
     if status not in {"completed", "pending", "failed"}:
         raise ValueError("无效任务终态")
+    if type(attempt_count) is not int or attempt_count < 1:
+        raise ValueError("领取次数必须为正整数")
     with database_connection(database_path) as connection:
         connection.execute("BEGIN IMMEDIATE")
         try:
@@ -561,12 +565,14 @@ def _mark_evidence(
                 """
                 UPDATE evidence
                 SET processing_status = ?, error_message = ?, finished_at = ?, locked_at = NULL
-                WHERE id = ? AND processing_status = 'processing'
+                WHERE id = ? AND processing_status = 'processing' AND attempt_count = ?
                 """,
-                (status, error_message, utc_now(), evidence_id),
+                (status, error_message, utc_now(), evidence_id, attempt_count),
             )
             if cursor.rowcount != 1:
-                raise ValueError("任务不存在或当前不在 processing 状态")
+                # A timed-out worker cannot finish a newer claim, even when its
+                # evidence is processing again. Keep this check in the UPDATE.
+                raise ValueError("任务不存在、当前不在 processing 状态或领取已过期")
             batch_ids = [
                 row[0]
                 for row in connection.execute(
@@ -580,18 +586,23 @@ def _mark_evidence(
             raise
 
 
-def mark_evidence_completed(database_path: str | Path, evidence_id: int) -> None:
-    _mark_evidence(database_path, evidence_id, "completed", None)
+def mark_evidence_completed(
+    database_path: str | Path, evidence_id: int, *, attempt_count: int
+) -> None:
+    _mark_evidence(database_path, evidence_id, "completed", None, attempt_count=attempt_count)
 
 
 def mark_evidence_pending(
-    database_path: str | Path, evidence_id: int, reason: str | None = None
+    database_path: str | Path, evidence_id: int, reason: str | None = None,
+    *, attempt_count: int,
 ) -> None:
-    _mark_evidence(database_path, evidence_id, "pending", reason)
+    _mark_evidence(database_path, evidence_id, "pending", reason, attempt_count=attempt_count)
 
 
-def mark_evidence_failed(database_path: str | Path, evidence_id: int, error: str) -> None:
-    _mark_evidence(database_path, evidence_id, "failed", error)
+def mark_evidence_failed(
+    database_path: str | Path, evidence_id: int, error: str, *, attempt_count: int
+) -> None:
+    _mark_evidence(database_path, evidence_id, "failed", error, attempt_count=attempt_count)
 
 
 def requeue_stale_processing_jobs(
