@@ -81,6 +81,7 @@ D:\Codes\DGM
 ## 开发文档
 
 - `AGENTS.md`：Codex 的最高优先级项目规则。
+- `docs/COMMUNICATION_WORKFLOW.md`：我、用户与 Codex 通过 GitHub 协作的规则。
 - `docs/BUSINESS_RULES.md`：不可擅自改变的业务规则。
 - `docs/SYSTEM_DESIGN.md`：整体系统架构和数据设计。
 - `docs/IMPLEMENTATION_PLAN.md`：分阶段开发顺序。
@@ -98,3 +99,7 @@ D:\Codes\DGM
 ## 部署方向
 
 正式版本运行在一台配有 RTX 3090 的 Windows 主机上。Web 服务与 OCR Worker 相互独立，避免大量 OCR 任务导致网页无响应。厂内其他电脑通过局域网访问，不直接暴露到公网。
+
+## GitHub 协作
+
+稳定规则保存在 `main` 分支；每项开发工作先建立 GitHub Issue。Codex 从最新 `main` 创建独立分支完成代码和测试，再提交 Pull Request。用户确认并合并后，下一项任务才能开始。具体状态、命名和交付规则见 `docs/COMMUNICATION_WORKFLOW.md`。
