@@ -1,0 +1,24 @@
+# Local runtime data and business files
+data/
+exports/
+logs/
+
+# Python environments, caches, and coverage
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+
+# Editors and operating systems
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

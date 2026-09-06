@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}批次管理 - 铭深文件生成系统{% endblock %}
+{% block content %}
+<div class="page-heading">
+  <div>
+    <h1>批次管理</h1>
+    <p>创建上传批次并查看图片任务进度。</p>
+  </div>
+  <a class="button" href="{{ url_for('batch_new') }}">新建批次</a>
+</div>
+
+{% if batches %}
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>批次编号</th><th>名称</th><th>创建时间</th><th>总数</th>
+        <th>排队</th><th>处理中</th><th>已完成</th><th>待确认</th><th>失败</th><th>批次状态</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for batch in batches %}
+      <tr>
+        <td><a href="{{ url_for('batch_detail', batch_id=batch['id']) }}">{{ batch['batch_no'] }}</a></td>
+        <td>{{ batch['name'] }}</td>
+        <td>{{ batch['created_at'] }}</td>
+        <td>{{ batch['total'] }}</td><td>{{ batch['queued'] }}</td>
+        <td>{{ batch['processing'] }}</td><td>{{ batch['completed'] }}</td>
+        <td>{{ batch['pending'] }}</td><td>{{ batch['failed'] }}</td>
+        <td><span class="status {{ batch['status'] }}">{{ status_label[batch['status']] }}</span></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="empty">还没有批次，请先新建批次。</div>
+{% endif %}
+{% endblock %}

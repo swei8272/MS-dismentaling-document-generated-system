@@ -78,6 +78,42 @@ D:\Codes\DGM
 
 开发按 `docs/IMPLEMENTATION_PLAN.md` 分阶段进行。第一阶段只建立批次、数据库迁移和后台任务基础，不执行真正 OCR。完成第一阶段验收后，再接入 RTX 3090 GPU OCR。
 
+当前第一阶段提供：
+
+- SQLite 版本化迁移；
+- 批次创建、列表、详情和图片上传；
+- SHA-256 全局图片去重；
+- 可恢复的持久化任务状态及原子领取接口；
+- 不加载 OCR 的 Worker 自检骨架。
+
+## Windows 本机启动
+
+首次运行：
+
+```bat
+install.bat
+start.bat
+```
+
+浏览器访问 `http://127.0.0.1:5000`。`start.bat` 使用 Waitress，并监听局域网地址 `0.0.0.0:5000`；如需从其他电脑访问，应仅在受信任的厂内网络开放 Windows 防火墙端口。
+
+Worker 骨架可以单独运行：
+
+```bat
+start_worker.bat
+```
+
+第一阶段 Worker 只检查数据库迁移、任务领取接口并恢复超时任务，然后安全退出；不会领取正常任务，也不会加载或执行 OCR。
+
+运行开发测试：
+
+```bat
+.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
+.venv\Scripts\python.exe -m pytest
+```
+
+默认数据库和图片目录从项目文件位置推导，分别为 `data\vehicles.db` 和 `data\uploads`。程序只会通过版本化迁移升级数据库，不会重建已有数据库。若检测到无法识别的旧 `evidence` 表结构，程序会在写入迁移前停止并报告。
+
 ## 开发文档
 
 - `AGENTS.md`：Codex 的最高优先级项目规则。
