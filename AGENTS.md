@@ -11,7 +11,7 @@
 4. `docs/BUSINESS_RULES.md`
 5. `docs/SYSTEM_DESIGN.md`
 6. `docs/IMPLEMENTATION_PLAN.md`
-7. 当前 GitHub Issue 和对应阶段任务文件，例如 `docs/INSTRUCTIONS_PHASE_1.md`
+7. 当前 GitHub Issue 和对应阶段任务文件，例如 `docs/INSTRUCTIONS_PHASE_2.md`
 8. `docs/ACCEPTANCE_CRITERIA.md`
 
 如内容冲突，优先级依次为：用户在当前任务中的最新明确指令、当前 GitHub Issue 的验收条件、`AGENTS.md`、其他项目文档。Codex 必须在完成报告中说明差异。
@@ -24,16 +24,17 @@
 
 ## 当前阶段
 
-除非用户明确指定其他阶段，当前只实施 `docs/INSTRUCTIONS_PHASE_1.md`：
+第一阶段已由 PR #3 完成并合并。当前只实施
+`docs/INSTRUCTIONS_PHASE_2.md`：
 
-- 数据库迁移；
-- 批次管理；
-- 图片入队；
-- 后台任务接口；
-- 批次页面；
-- 自动化测试。
+- 浏览器按数量和总字节限制自动分组上传；
+- 逐文件 JSON 结果、可靠进度和有限自动重试；
+- 上传失败记录、刷新恢复及批次图片分页；
+- 向已有批次补充图片；
+- 自动化测试、真实浏览器验证和 500 张合成图片验证。
 
-当前阶段禁止提前实现 GPU OCR、车辆匹配重写、批次 Excel 或最新总表。
+当前阶段禁止提前实现 GPU OCR、常驻 OCR Worker、车辆匹配重写、批次 Excel
+或最新总表。
 
 ## 开始工作前
 

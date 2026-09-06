@@ -8,7 +8,7 @@ from typing import Any, Iterator
 
 
 TASK_STATUSES = ("queued", "processing", "completed", "pending", "failed")
-MIGRATION_VERSION = 1
+MIGRATION_VERSION = 2
 BUSY_TIMEOUT_MS = 5_000
 
 
@@ -88,7 +88,7 @@ def _validate_existing_schema(connection: sqlite3.Connection) -> None:
 
 
 def migrate_database(database_path: str | Path) -> None:
-    """Apply the current schema once; every statement is safe to retry."""
+    """Apply every unapplied migration in order; each migration is retry-safe."""
     with database_connection(database_path) as connection:
         _validate_existing_schema(connection)
         connection.execute("BEGIN IMMEDIATE")
@@ -101,15 +101,26 @@ def migrate_database(database_path: str | Path) -> None:
                 )
                 """
             )
-            applied = connection.execute(
-                "SELECT 1 FROM schema_migrations WHERE version = ?",
-                (MIGRATION_VERSION,),
-            ).fetchone()
-            if applied is None:
-                _apply_phase_one_migration(connection)
+            migrations = (
+                (1, _apply_phase_one_migration),
+                (2, _apply_phase_two_migration),
+            )
+            applied = {
+                row["version"]
+                for row in connection.execute("SELECT version FROM schema_migrations")
+            }
+            unknown = sorted(version for version in applied if version > MIGRATION_VERSION)
+            if unknown:
+                raise UnsupportedSchemaError(
+                    f"数据库版本 {unknown[-1]} 高于程序支持的版本 {MIGRATION_VERSION}，已停止迁移"
+                )
+            for version, migration in migrations:
+                if version in applied:
+                    continue
+                migration(connection)
                 connection.execute(
                     "INSERT INTO schema_migrations(version, applied_at) VALUES (?, ?)",
-                    (MIGRATION_VERSION, utc_now()),
+                    (version, utc_now()),
                 )
             connection.commit()
         except Exception:
@@ -251,6 +262,35 @@ def _apply_phase_one_migration(connection: sqlite3.Connection) -> None:
         _migrate_legacy_evidence(connection)
 
 
+def _apply_phase_two_migration(connection: sqlite3.Connection) -> None:
+    """Keep upload transport failures separate from OCR evidence task state."""
+    connection.execute(
+        """
+        CREATE TABLE IF NOT EXISTS upload_failures (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            batch_id INTEGER NOT NULL,
+            client_id TEXT NOT NULL,
+            original_name TEXT NOT NULL,
+            size_bytes INTEGER,
+            reason TEXT NOT NULL,
+            retryable INTEGER NOT NULL DEFAULT 0 CHECK(retryable IN (0, 1)),
+            status TEXT NOT NULL DEFAULT 'failed'
+                CHECK(status IN ('failed', 'resolved')),
+            created_at TEXT NOT NULL,
+            resolved_at TEXT,
+            UNIQUE(batch_id, client_id),
+            FOREIGN KEY(batch_id) REFERENCES batches(id) ON DELETE RESTRICT
+        )
+        """
+    )
+    connection.execute(
+        """
+        CREATE INDEX IF NOT EXISTS ix_upload_failures_batch_status
+        ON upload_failures(batch_id, status, id DESC)
+        """
+    )
+
+
 def _migrate_legacy_evidence(connection: sqlite3.Connection) -> None:
     """Place all pre-queue evidence in one completed, traceable import batch."""
     count = connection.execute("SELECT COUNT(*) FROM evidence").fetchone()[0]
@@ -365,10 +405,29 @@ def get_batch_with_stats(database_path: str | Path, batch_id: int) -> sqlite3.Ro
 
 
 def list_batch_images(database_path: str | Path, batch_id: int) -> list[sqlite3.Row]:
+    return list_batch_images_page(database_path, batch_id)
+
+
+def list_batch_images_page(
+    database_path: str | Path,
+    batch_id: int,
+    *,
+    limit: int | None = None,
+    offset: int = 0,
+) -> list[sqlite3.Row]:
+    if limit is not None and limit < 1:
+        raise ValueError("分页数量必须为正整数")
+    if offset < 0:
+        raise ValueError("分页偏移不能为负数")
+    pagination = ""
+    parameters: list[Any] = [batch_id]
+    if limit is not None:
+        pagination = " LIMIT ? OFFSET ?"
+        parameters.extend((limit, offset))
     with database_connection(database_path) as connection:
         return list(
             connection.execute(
-                """
+                f"""
                 SELECT bi.original_name, bi.upload_order, bi.created_at,
                        e.id AS evidence_id, e.processing_status, e.error_message,
                        e.sha256, e.stored_path
@@ -376,10 +435,106 @@ def list_batch_images(database_path: str | Path, batch_id: int) -> list[sqlite3.
                 JOIN evidence e ON e.id = bi.evidence_id
                 WHERE bi.batch_id = ?
                 ORDER BY bi.upload_order, e.id
+                {pagination}
                 """,
-                (batch_id,),
+                tuple(parameters),
             )
         )
+
+
+def count_batch_images(database_path: str | Path, batch_id: int) -> int:
+    with database_connection(database_path) as connection:
+        return connection.execute(
+            "SELECT COUNT(*) FROM batch_images WHERE batch_id = ?", (batch_id,)
+        ).fetchone()[0]
+
+
+def record_upload_failure(
+    database_path: str | Path,
+    *,
+    batch_id: int,
+    client_id: str,
+    original_name: str,
+    size_bytes: int | None,
+    reason: str,
+    retryable: bool,
+) -> int:
+    """Persist a transport/validation failure without creating OCR evidence."""
+    now = utc_now()
+    with database_connection(database_path) as connection:
+        connection.execute("BEGIN IMMEDIATE")
+        try:
+            cursor = connection.execute(
+                """
+                INSERT INTO upload_failures(
+                    batch_id, client_id, original_name, size_bytes, reason,
+                    retryable, status, created_at, resolved_at
+                ) VALUES (?, ?, ?, ?, ?, ?, 'failed', ?, NULL)
+                ON CONFLICT(batch_id, client_id) DO UPDATE SET
+                    original_name = excluded.original_name,
+                    size_bytes = excluded.size_bytes,
+                    reason = excluded.reason,
+                    retryable = excluded.retryable,
+                    status = 'failed',
+                    created_at = excluded.created_at,
+                    resolved_at = NULL
+                """,
+                (
+                    batch_id,
+                    client_id,
+                    original_name,
+                    size_bytes,
+                    reason,
+                    int(retryable),
+                    now,
+                ),
+            )
+            failure_id = cursor.lastrowid
+            if not failure_id:
+                failure_id = connection.execute(
+                    """
+                    SELECT id FROM upload_failures
+                    WHERE batch_id = ? AND client_id = ?
+                    """,
+                    (batch_id, client_id),
+                ).fetchone()[0]
+            connection.commit()
+            return failure_id
+        except Exception:
+            connection.rollback()
+            raise
+
+
+def list_upload_failures(
+    database_path: str | Path, batch_id: int, *, limit: int = 100
+) -> list[sqlite3.Row]:
+    if limit < 1:
+        raise ValueError("失败记录数量必须为正整数")
+    with database_connection(database_path) as connection:
+        return list(
+            connection.execute(
+                """
+                SELECT id, client_id, original_name, size_bytes, reason,
+                       retryable, status, created_at, resolved_at
+                FROM upload_failures
+                WHERE batch_id = ? AND status = 'failed'
+                ORDER BY id DESC
+                LIMIT ?
+                """,
+                (batch_id, limit),
+            )
+        )
+
+
+def count_upload_failures(database_path: str | Path, batch_id: int) -> int:
+    with database_connection(database_path) as connection:
+        return connection.execute(
+            """
+            SELECT COUNT(*) FROM upload_failures
+            WHERE batch_id = ? AND status = 'failed'
+            """,
+            (batch_id,),
+        ).fetchone()[0]
 
 
 def set_batch_uploading(database_path: str | Path, batch_id: int) -> None:
@@ -455,6 +610,8 @@ def attach_uploaded_evidence(
     media_type: str,
     size_bytes: int,
     original_name: str,
+    upload_failure_id: int | None = None,
+    upload_failure_client_id: str | None = None,
 ) -> tuple[int, bool, bool]:
     """Create/reuse evidence and attach it once to a batch.
 
@@ -499,6 +656,16 @@ def attach_uploaded_evidence(
                 (batch_id, evidence_id, original_name, next_order, now),
             )
             relationship_created = cursor.rowcount == 1
+            if upload_failure_id is not None:
+                connection.execute(
+                    """
+                    UPDATE upload_failures
+                    SET status = 'resolved', resolved_at = ?
+                    WHERE id = ? AND batch_id = ? AND client_id = ?
+                      AND status = 'failed'
+                    """,
+                    (now, upload_failure_id, batch_id, upload_failure_client_id),
+                )
             _refresh_batches(connection, [batch_id])
             connection.commit()
             return evidence_id, created, relationship_created

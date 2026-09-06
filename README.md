@@ -76,15 +76,19 @@ D:\Codes\DGM
 
 ## 开发状态
 
-开发按 `docs/IMPLEMENTATION_PLAN.md` 分阶段进行。第一阶段只建立批次、数据库迁移和后台任务基础，不执行真正 OCR。完成第一阶段验收后，再接入 RTX 3090 GPU OCR。
+开发按 `docs/IMPLEMENTATION_PLAN.md` 分阶段进行。第一阶段批次与任务基础已完成，当前进入第二阶段分组上传与进度；仍不执行真正 OCR。
 
-当前第一阶段提供：
+当前提供：
 
 - SQLite 版本化迁移；
 - 批次创建、列表、详情和图片上传；
 - SHA-256 全局图片去重；
 - 可恢复的持久化任务状态及原子领取接口；
-- 不加载 OCR 的 Worker 自检骨架。
+- 不加载 OCR 的 Worker 自检骨架；
+- 浏览器默认每组最多 25 张、文件净大小合计最多 64 MiB 的串行上传；
+- 单文件 16 MiB 限制、逐文件 JSON 结果、上传进度及最多 2 次自动重试；
+- 上传失败与 OCR 失败分开记录，页面刷新后恢复服务端状态；
+- 批次图片分页和向已有批次继续补充图片。
 
 ## Windows 本机启动
 
@@ -121,8 +125,10 @@ start_worker.bat
 - `docs/BUSINESS_RULES.md`：不可擅自改变的业务规则。
 - `docs/SYSTEM_DESIGN.md`：整体系统架构和数据设计。
 - `docs/IMPLEMENTATION_PLAN.md`：分阶段开发顺序。
-- `docs/INSTRUCTIONS_PHASE_1.md`：当前第一阶段的具体实施任务。
+- `docs/INSTRUCTIONS_PHASE_1.md`：已完成的第一阶段实施任务。
+- `docs/INSTRUCTIONS_PHASE_2.md`：当前第二阶段的具体实施与验收约定。
 - `docs/ACCEPTANCE_CRITERIA.md`：测试和交付标准。
+- `docs/PHASE_2_VALIDATION_REPORT.md`：第二阶段自动化与 500 张合成图片实测结果。
 
 ## 数据原则
 

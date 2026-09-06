@@ -40,7 +40,17 @@ def display_filename(filename: str | None) -> str:
     return clean[:255] or "未命名图片"
 
 
-def save_image_stream(upload: FileStorage, upload_root: str | Path) -> StoredUpload:
+def _mib_text(size: int) -> str:
+    return f"{size / (1024 * 1024):g} MiB"
+
+
+def save_image_stream(
+    upload: FileStorage,
+    upload_root: str | Path,
+    *,
+    max_file_bytes: int | None = None,
+    remaining_group_bytes: int | None = None,
+) -> StoredUpload:
     original_name = display_filename(upload.filename)
     extension = Path(original_name).suffix.lower()
     if extension not in ALLOWED_EXTENSIONS:
@@ -61,6 +71,12 @@ def save_image_stream(upload: FileStorage, upload_root: str | Path) -> StoredUpl
                 output.write(chunk)
                 digest.update(chunk)
                 size += len(chunk)
+                if max_file_bytes is not None and size > max_file_bytes:
+                    raise UploadValidationError(
+                        f"单个文件不能超过 {_mib_text(max_file_bytes)}"
+                    )
+                if remaining_group_bytes is not None and size > remaining_group_bytes:
+                    raise UploadValidationError("本组图片总大小超过服务端限制，请减小分组")
         if size == 0:
             raise UploadValidationError("图片文件为空")
         try:
