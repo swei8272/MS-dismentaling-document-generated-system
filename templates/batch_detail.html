@@ -9,22 +9,67 @@
   </div>
 </div>
 
-<div class="stats">
-  <div><strong>{{ batch['total'] }}</strong><span>总数</span></div>
-  <div><strong>{{ batch['queued'] }}</strong><span>排队</span></div>
-  <div><strong>{{ batch['processing'] }}</strong><span>处理中</span></div>
-  <div><strong>{{ batch['completed'] }}</strong><span>已完成</span></div>
-  <div><strong>{{ batch['pending'] }}</strong><span>待确认</span></div>
-  <div><strong>{{ batch['failed'] }}</strong><span>失败</span></div>
+<div class="stats" id="server-stats">
+  <div><strong data-stat="total">{{ batch['total'] }}</strong><span>服务端已保存</span></div>
+  <div><strong data-stat="queued">{{ batch['queued'] }}</strong><span>OCR 排队</span></div>
+  <div><strong data-stat="processing">{{ batch['processing'] }}</strong><span>OCR 处理中</span></div>
+  <div><strong data-stat="completed">{{ batch['completed'] }}</strong><span>OCR 已完成</span></div>
+  <div><strong data-stat="pending">{{ batch['pending'] }}</strong><span>待确认</span></div>
+  <div><strong data-stat="failed">{{ batch['failed'] }}</strong><span>OCR 失败</span></div>
 </div>
 
-<section class="panel">
-  <h2>上传图片</h2>
-  <p>图片只会保存并进入后台队列；本阶段不会执行 OCR。</p>
-  <form method="post" action="{{ url_for('batch_upload', batch_id=batch['id']) }}" enctype="multipart/form-data">
-    <input type="file" name="files" accept=".jpg,.jpeg,.png,.webp,.bmp,.tif,.tiff" multiple required>
-    <button class="button" type="submit">保存并排队</button>
+<section
+  class="panel uploader"
+  id="batch-uploader"
+  data-upload-url="{{ url_for('batch_upload', batch_id=batch['id']) }}"
+  data-status-url="{{ url_for('batch_status', batch_id=batch['id']) }}"
+  data-failure-url="{{ url_for('batch_upload_failures', batch_id=batch['id']) }}"
+  data-group-max-files="{{ uploader_config['group_max_files'] }}"
+  data-group-max-bytes="{{ uploader_config['group_max_bytes'] }}"
+  data-file-max-bytes="{{ uploader_config['file_max_bytes'] }}"
+  data-max-auto-retries="{{ uploader_config['max_auto_retries'] }}"
+  data-poll-ms="{{ uploader_config['poll_ms'] }}"
+>
+  <h2>分组上传图片</h2>
+  <p>
+    每组最多 {{ uploader_config['group_max_files'] }} 张、文件净大小合计最多
+    {{ (uploader_config['group_max_bytes'] / 1024 / 1024)|int }} MiB；单个文件最多
+    {{ (uploader_config['file_max_bytes'] / 1024 / 1024)|int }} MiB。图片保存后只进入 OCR 队列，不代表识别完成。
+  </p>
+  <p class="refresh-note">刷新后已保存结果会从服务端恢复；浏览器无法保留尚未确认的本地文件，请重新选择这些文件。重新选择整批图片是安全的，服务端会按内容去重。</p>
+  <form id="batch-upload-form" method="post" action="{{ url_for('batch_upload', batch_id=batch['id']) }}" enctype="multipart/form-data">
+    <input id="batch-files" type="file" name="files" accept=".jpg,.jpeg,.png,.webp,.bmp,.tif,.tiff" multiple required>
+    <button class="button" id="start-upload" type="submit">开始上传</button>
+    <button class="button secondary" id="retry-upload" type="button" disabled>重试失败/未确认</button>
   </form>
+
+  <div id="upload-dashboard" class="upload-dashboard" hidden>
+    <div class="upload-counters">
+      <span>已选 <strong data-upload-count="total">0</strong></span>
+      <span>服务端已确认 <strong data-upload-count="confirmed">0</strong></span>
+      <span>上传中 <strong data-upload-count="uploading">0</strong></span>
+      <span>等待 <strong data-upload-count="waiting">0</strong></span>
+      <span>失败/未确认 <strong data-upload-count="failed">0</strong></span>
+      <span>重试中 <strong data-upload-count="retrying">0</strong></span>
+    </div>
+    <progress id="upload-progress" max="100" value="0"></progress>
+    <p id="upload-message" role="status" aria-live="polite"></p>
+    <div id="local-file-list" class="local-file-list"></div>
+    <div class="pagination compact" id="local-pagination"></div>
+  </div>
+</section>
+
+<section class="panel" id="upload-failure-panel"{% if not upload_failures %} hidden{% endif %}>
+  <h2>上传失败记录 <span id="upload-failure-count">{{ upload_failure_count }}</span></h2>
+  <p>这些记录属于文件传输或格式校验，不会创建 evidence，也不计入 OCR 失败。</p>
+  <div id="upload-failure-list">
+    {% for failure in upload_failures %}
+    <div class="failure-row" data-failure-id="{{ failure['id'] }}" data-client-id="{{ failure['client_id'] }}" data-size="{{ failure['size_bytes'] if failure['size_bytes'] is not none else '' }}">
+      <strong>{{ failure['original_name'] }}</strong>
+      <span>{{ failure['reason'] }}</span>
+    </div>
+    {% endfor %}
+  </div>
 </section>
 
 <section class="panel">
@@ -48,5 +93,13 @@
   {% else %}
   <div class="empty">这个批次还没有图片。</div>
   {% endif %}
+  {% if page_count > 1 %}
+  <nav class="pagination" aria-label="批次图片分页">
+    {% if page > 1 %}<a class="button secondary" href="{{ url_for('batch_detail', batch_id=batch['id'], page=page-1) }}">上一页</a>{% endif %}
+    <span>第 {{ page }} / {{ page_count }} 页</span>
+    {% if page < page_count %}<a class="button secondary" href="{{ url_for('batch_detail', batch_id=batch['id'], page=page+1) }}">下一页</a>{% endif %}
+  </nav>
+  {% endif %}
 </section>
+<script src="{{ url_for('static', filename='batch_upload.js') }}" defer></script>
 {% endblock %}

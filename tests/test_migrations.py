@@ -27,6 +27,7 @@ def test_fresh_database_initialization(database_path: Path) -> None:
         "conflicts",
         "batches",
         "batch_images",
+        "upload_failures",
     } <= table_names(database_path)
     with connect_database(database_path) as connection:
         assert connection.execute("PRAGMA foreign_keys").fetchone()[0] == 1
@@ -34,7 +35,7 @@ def test_fresh_database_initialization(database_path: Path) -> None:
         assert [
             row[0]
             for row in connection.execute("SELECT version FROM schema_migrations")
-        ] == [1]
+        ] == [1, 2]
 
 
 def _create_known_legacy_database(path: Path) -> None:
@@ -105,11 +106,41 @@ def test_migration_is_idempotent(database_path: Path) -> None:
     migrate_database(database_path)
     migrate_database(database_path)
     with connect_database(database_path) as connection:
-        assert connection.execute("SELECT COUNT(*) FROM schema_migrations").fetchone()[0] == 1
+        assert connection.execute("SELECT COUNT(*) FROM schema_migrations").fetchone()[0] == 2
         assert connection.execute(
             "SELECT COUNT(*) FROM batches WHERE batch_no = ?", ("LEGACY-IMPORT",)
         ).fetchone()[0] == 1
         assert connection.execute("SELECT COUNT(*) FROM batch_images").fetchone()[0] == 1
+
+
+def test_phase_one_database_upgrades_to_phase_two_without_changing_queue_rows(
+    database_path: Path,
+) -> None:
+    _create_known_legacy_database(database_path)
+    migrate_database(database_path)
+    with connect_database(database_path) as connection:
+        connection.execute("DELETE FROM schema_migrations WHERE version = ?", (2,))
+        connection.execute("DROP TABLE upload_failures")
+        before_evidence = [dict(row) for row in connection.execute("SELECT * FROM evidence")]
+        before_links = [dict(row) for row in connection.execute("SELECT * FROM batch_images")]
+        connection.commit()
+
+    migrate_database(database_path)
+    migrate_database(database_path)
+
+    with connect_database(database_path) as connection:
+        assert [
+            row[0]
+            for row in connection.execute(
+                "SELECT version FROM schema_migrations ORDER BY version"
+            )
+        ] == [1, 2]
+        assert [dict(row) for row in connection.execute("SELECT * FROM evidence")] == before_evidence
+        assert [dict(row) for row in connection.execute("SELECT * FROM batch_images")] == before_links
+        assert connection.execute(
+            "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = ?",
+            ("upload_failures",),
+        ).fetchone()[0] == 1
 
 
 def test_unknown_legacy_evidence_schema_stops_before_writing(database_path: Path) -> None:
