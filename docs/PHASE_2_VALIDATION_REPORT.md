@@ -3,7 +3,39 @@
 本报告把 2026-09-06 的历史结果与 2026-09-07 审查修复后的结果分开记录。
 全部验证均使用合成图片和隔离数据库，未读取、修改、删除或重建真实业务数据。
 
-## Sandbox 底层错误核实（2026-09-07，当前结果）
+## Sandbox 恢复与真实浏览器续验（2026-09-07 至 09-08，当前结果）
+
+用户明确授权后，仅在 `D:\Codes\DGM\.git` 目录自身为 `LUIGIWIN\swei` 添加
+`WRITE_DAC`，未设置继承标志，未递归修改，保留原所有者和其他 ACE。修改前安全
+描述符保存在本机临时文件 `dgm-git-acl-before-20260907T123412.json`。授权命令
+退出码 0；默认 `workspace-write` 命令已成功运行，实测身份为
+`LUIGIWIN\CodexSandboxOffline`（SID 末段 1003）。2026-09-07T12:36:52.979Z
+setup 日志 `errors=[]`，Codex 正常安装了 `.git` 保护性 deny ACE。**sandbox
+启动故障已经恢复。**
+
+随后运行原程序代码 `0acd823e7e67684ae4fa9d50fa63aed5fd7f8629`（checkout
+`7b7dc36382de22a990a923aca42f6ab4232e406a`），在既有纯合成临时根下面新建
+`server-resumed-20260907T1237` 隔离数据库/图片目录，启动 Waitress 5057。
+真实 Chrome 已打开 `/batches`，点击新建批次、输入“浏览器 51 张验证”并提交，
+成功显示批次 `20260907-001`，已保存 0、图片列表为空。页面同时显示 25 张/64 MiB
+配置和刷新后需重选文件的提示；这些文案观察不等于相关行为验收通过。
+
+文件 chooser 已触发并返回 `multiple=true`；尝试选择 51 张合成 JPEG 时，扩展
+`fileChooser.setFiles` 返回 `-32000 / Not allowed`。其官方随附故障指引要求
+ChatGPT 扩展启用 “Allow access to file URLs”；本轮未更改该权限。随后尝试受支持
+的 Windows 原生 Chrome 窗口流程，computer-use 因无法可靠确认当前浏览器 URL
+而终止本轮控制，已停止后续页面输入。这是浏览器控制阻断，已不再是 sandbox setup
+失败。没有完成图片上传、51/52 分页、500 张规模、故障重试或浏览器内存测量。
+
+真实页面截图为
+[01-created-batch.png](validation/issue4-browser-resumed-7b7dc36/01-created-batch.png)，
+只包含合成批次；实际操作与 ACL 恢复摘要见
+[raw_acl_browser_recovery.json](validation/issue4-browser-resumed-7b7dc36/raw_acl_browser_recovery.json)。
+隔离服务 PID 29860 已通过原执行会话终止，5057 监听数 0，临时数据保留。
+本轮只修改文档/证据，无程序代码或迁移变更；未读取敏感 sandbox 凭据，未访问
+真实数据库及业务图片。**浏览器验收仍未完成，第二阶段未全部通过。**
+
+## Sandbox 底层错误核实（2026-09-07，历史诊断）
 
 本轮读取实际轮转日志 `%CODEX_HOME%/.sandbox/sandbox.2026-09-07.log`；
 无日期的 `sandbox.log` 不存在。未读取或输出 `.sandbox-secrets`。最新复现为

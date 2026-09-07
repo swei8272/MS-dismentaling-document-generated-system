@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "program_code_sha": "0acd823e7e67684ae4fa9d50fa63aed5fd7f8629",
+  "checkout_sha": "7b7dc36382de22a990a923aca42f6ab4232e406a",
+  "acl_recovery": {
+    "target": "D:\\Codes\\DGM\\.git",
+    "principal": "LUIGIWIN\\swei",
+    "added_right": "WRITE_DAC",
+    "inheritance": "none",
+    "recursive": false,
+    "owner_preserved": "LUIGIWIN\\CodexSandboxOffline",
+    "backup": "%LOCALAPPDATA%\\Temp\\dgm-git-acl-before-20260907T123412.json",
+    "backup_utc": "2026-09-07T12:34:12.9365030Z",
+    "grant_exit_code": 0,
+    "default_sandbox_whoami": "luigiwin\\codexsandboxoffline",
+    "sandbox_account_rid": 1003,
+    "setup_log_utc": "2026-09-07T12:36:52.979224100Z",
+    "setup_errors": [],
+    "protective_deny_aces_installed_by_codex": true,
+    "sandbox_mode": "workspace-write"
+  },
+  "browser": {
+    "backend": "Chrome extension and supported Windows computer-use",
+    "url": "http://127.0.0.1:5057/batches/1",
+    "batch_no": "20260907-001",
+    "batch_name": "浏览器 51 张验证",
+    "actions": [
+      "Opened isolated batches page",
+      "Clicked create batch",
+      "Entered batch name and submitted form",
+      "Observed saved count 0 and empty image list",
+      "Opened multiple-file chooser",
+      "Attempted selecting 51 synthetic JPEG paths; setFiles rejected",
+      "Attempted supported native Chrome window flow; computer-use then stopped because current browser URL could not be established reliably"
+    ],
+    "filechooser_multiple": true,
+    "set_files_error": {
+      "code": -32000,
+      "message": "Not allowed"
+    },
+    "extension_upload_requirement": "ChatGPT Chrome extension Allow access to file URLs (not changed)",
+    "native_control_stop": "could not determine the current browser URL on Windows with enough confidence to enforce policy",
+    "successful_browser_uploads": 0,
+    "upload_acceptance": "incomplete",
+    "browser_memory": null,
+    "screenshot": "01-created-batch.png",
+    "screenshot_bytes": 90798,
+    "screenshot_saved_utc": "2026-09-07T22:26:12Z"
+  },
+  "isolated_service": {
+    "root": "%LOCALAPPDATA%\\Temp\\dgm-phase2-browser-9def9aedf733486e9cc633a1d4a95335\\server-resumed-20260907T1237",
+    "pid": 29860,
+    "stopped_via_original_exec_session": true,
+    "listeners_after_stop": 0,
+    "temporary_data_retained": true
+  },
+  "scope": {
+    "business_data_accessed": false,
+    "new_migration": false,
+    "production_code_changed": false,
+    "secrets_read": false,
+    "pr_merged": false
+  }
+}

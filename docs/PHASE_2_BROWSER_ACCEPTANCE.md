@@ -19,7 +19,10 @@ computer-use 技能初始化受支持的本机浏览器能力并按规定重试�
 恢复 sandbox 启动能力后继续执行。后续日志已确认实际失败对象为 `.git`：
 setup helper 添加 deny ACE 时 `SetNamedSecurityInfoW` 返回错误 5；`.pytest_cache`
 的读取 ACL 已在单独授权后修复。详见验证报告顶部的最新诊断，旧的缓存根因推测
-不再成立；修改 `.git` 权限尚待明确授权。
+不再成立。用户后续已明确授权 `.git` 自身的 `swei:WRITE_DAC`，sandbox 已恢复，
+实际受限身份为 Offline。真实 Chrome 已成功创建隔离批次并保存截图，但文件选择
+被扩展 `setFiles: Not allowed` 阻断，原生备用流程又因不能可靠确认当前 URL 而
+终止控制；尚未完成图片上传。最新结果和截图见验证报告顶部的恢复记录。
 
 ## 1. 准备独立环境
 
