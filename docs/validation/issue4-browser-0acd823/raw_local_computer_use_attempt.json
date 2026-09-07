@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-07T17:37:52.5802669+10:00",
+  "program_code_sha": "0acd823e7e67684ae4fa9d50fa63aed5fd7f8629",
+  "acceptance_instruction_sha": "6473329bab725d387bed5501a96e387875bd0adf",
+  "checkout_head_at_start": "6473329bab725d387bed5501a96e387875bd0adf",
+  "program_files_changed_after_program_sha": false,
+  "environment": {
+    "platform": "Windows 10 10.0.19045 SP0",
+    "run_root": "%LOCALAPPDATA%\\Temp\\dgm-phase2-browser-9def9aedf733486e9cc633a1d4a95335",
+    "run_root_created_at_utc": "2026-09-07T07:30:20.9403405Z",
+    "attempt_recorded_at_utc": "2026-09-07T07:37:52.5802669Z",
+    "data_scope": "fresh synthetic images and isolated SQLite/upload directories only",
+    "production_data_accessed": false
+  },
+  "commands": [
+    ".\\.venv\\Scripts\\python.exe scripts\\phase2_validation.py generate <run-root>\\images --count 500 --width 1600 --height 1200",
+    ".\\.venv\\Scripts\\python.exe scripts\\phase2_validation.py inspect <run-root>\\images",
+    ".\\.venv\\Scripts\\python.exe scripts\\phase2_validation.py serve <run-root>\\server --port 5057"
+  ],
+  "synthetic_inventory": {
+    "image_count": 500,
+    "unique_sha256_count": 500,
+    "width": 1600,
+    "height": 1200,
+    "minimum_bytes": 712184,
+    "maximum_bytes": 1002456,
+    "average_bytes": 876148,
+    "total_bytes": 438074092,
+    "damaged_file_bytes": 36
+  },
+  "isolated_waitress": {
+    "url": "http://127.0.0.1:5057/batches",
+    "pid": 11524,
+    "get_batches_http_status": 200,
+    "expected_title_found": true,
+    "stderr_bytes": 0,
+    "stopped_exact_pid": true,
+    "listeners_after_stop": 0,
+    "temporary_data_retained": true
+  },
+  "computer_use_attempts": [
+    {
+      "backend": "computer-use skill / @oai/sky",
+      "operation": "initialize trusted Node session",
+      "result": "failed_before_window_enumeration",
+      "error": "trusted Node process exited unexpectedly; kernel reset, rerun your request"
+    },
+    {
+      "backend": "computer-use skill / @oai/sky",
+      "operation": "single permitted recovery retry",
+      "result": "failed_before_window_enumeration",
+      "error": "windows sandbox failed: helper_unknown_error: setup refresh had errors"
+    },
+    {
+      "backend": "unified CUA fallback",
+      "operation": "cua.getState()",
+      "result": "failed_before_window_enumeration",
+      "error": "windows sandbox failed: helper_unknown_error: setup refresh had errors"
+    }
+  ],
+  "browser_observation": {
+    "window_enumeration_performed": false,
+    "application_page_opened": false,
+    "application_interaction_performed": false,
+    "files_uploaded_via_browser": 0,
+    "screenshots": [],
+    "browser_version": null,
+    "browser_memory_measurement": null,
+    "scenario_results": {
+      "51_image_pagination_and_filelist_preservation": "unverified",
+      "500_image_native_browser_upload": "unverified",
+      "25_file_and_64_mib_group_limits": "unverified",
+      "oversized_file_isolation": "unverified",
+      "server_confirmation_state": "unverified",
+      "limited_retry_and_later_group_continuation": "unverified",
+      "manual_retry_failed_or_unconfirmed_only": "unverified",
+      "refresh_and_outbox_recovery": "unverified",
+      "failure_pagination_and_replacement_retry": "unverified",
+      "response_loss_safe_retransmission": "unverified",
+      "final_server_statistics_and_image_list": "unverified"
+    }
+  },
+  "blocker_diagnosis": {
+    "path": "D:\\Codes\\DGM\\.pytest_cache",
+    "resolved_path_is_directory": true,
+    "get_item_succeeded": true,
+    "get_acl_result": "Attempted to perform an unauthorized operation",
+    "icacls_result": "Access is denied; Successfully processed 0 files; Failed processing 1 files",
+    "directory_or_acl_modified": false,
+    "causality_proven": false,
+    "assessment": "pre-existing inaccessible workspace directory is the suspected blocker for Windows sandbox setup refresh"
+  },
+  "acceptance_conclusion": "browser acceptance incomplete; no browser scenario passed or failed because the supported UI backends stopped before window enumeration"
+}

@@ -3,6 +3,62 @@
 本报告把 2026-09-06 的历史结果与 2026-09-07 审查修复后的结果分开记录。
 全部验证均使用合成图片和隔离数据库，未读取、修改、删除或重建真实业务数据。
 
+## 按 6473329b 执行本机浏览器验收（2026-09-07，当前结果）
+
+本轮按提交 `6473329bab725d387bed5501a96e387875bd0adf` 新增的
+[Windows 本机浏览器验收清单](PHASE_2_BROWSER_ACCEPTANCE.md) 执行。运行时
+checkout 为 `6473329b`；该提交相对验证程序提交
+`0acd823e7e67684ae4fa9d50fa63aed5fd7f8629` 只有文档差异，程序文件未改变。
+
+### 已完成的隔离环境准备
+
+- 系统临时运行根目录：
+  `%LOCALAPPDATA%\Temp\dgm-phase2-browser-9def9aedf733486e9cc633a1d4a95335`。
+  本轮准备和受阻诊断记录窗口为
+  2026-09-07T07:30:20.940Z–07:37:52.580Z（UTC）。
+- 新生成 500 张不同 SHA-256 的 1600×1200 JPEG；单图
+  712,184–1,002,456 bytes，平均 876,148 bytes，总计 438,074,092 bytes。
+  另生成 36 bytes 的故意损坏图片。数据均为合成数据。
+- 使用该临时目录中的隔离 SQLite 和上传目录启动 Waitress，PID 11524，地址
+  `http://127.0.0.1:5057/batches`；直接最小读取返回 HTTP 200 且找到预期标题，
+  服务标准错误日志为 0 bytes。
+- 验证结束后仅停止上述精确 PID，5057 监听数为 0。临时数据保留供后续续跑；
+  未读取、修改、删除或重建真实数据库、业务图片、备份或导出文件。
+
+准备命令分别为 `phase2_validation.py generate <run-root>\images --count 500
+--width 1600 --height 1200`、`phase2_validation.py inspect <run-root>\images`
+和 `phase2_validation.py serve <run-root>\server --port 5057`，均使用项目
+`.venv\Scripts\python.exe`。原始记录使用占位符隐藏本机用户目录；实际根目录
+已在运行时解析为系统临时目录。
+
+### 真实浏览器阻断与准确结论
+
+按 computer-use 技能要求，先初始化 `@oai/sky` 受信任 Node 会话。第一次返回
+`trusted Node process exited unexpectedly; kernel reset, rerun your request`；按技能
+恢复规则只重试一次，第二次在窗口枚举前返回
+`windows sandbox failed: helper_unknown_error: setup refresh had errors`。随后使用当前
+环境的统一 CUA 备用入口调用 `cua.getState()`，同样在枚举任何应用或窗口前返回
+相同 sandbox setup refresh 错误。
+
+只读诊断确认 `D:\Codes\DGM\.pytest_cache` 是既有目录且 `Get-Item` 可读，但
+`Get-Acl` 返回 `Attempted to perform an unauthorized operation`，`icacls` 返回
+`Access is denied`、处理 0 个文件并失败 1 个文件。这与三个 UI 后端错误中的
+workspace sandbox refresh 阶段一致；本轮没有改变该目录或 ACL，也没有绕过系统
+保护。修复、移动或删除该既有目录需要另行明确授权。
+
+因此本轮没有成功枚举浏览器窗口，没有打开应用页面，没有页面点击或原生文件选择，
+浏览器上传数为 0；没有截图、浏览器版本或浏览器内存记录。51/52 张分页与 FileList
+保留、500 张原生浏览器分组上传、64 MiB 边界、单文件超限隔离、服务器确认态、
+有限重试、手动重试、刷新/outbox 恢复、26 条失败分页与替换、响应丢失安全重传及
+最终 DOM 统计全部保持“未验证”。HTTP 200 只证明隔离服务可启动，不是浏览器
+验收证据。
+
+原始结构化事实见
+[raw_local_computer_use_attempt.json](validation/issue4-browser-0acd823/raw_local_computer_use_attempt.json)。
+程序代码未改变，因此没有把既有自动化测试或 500 张 Python 客户端规模结果重复
+登记为本轮新结果。**浏览器验收未完成，第二阶段尚未全部通过；PR 未合并，也未
+进入第三阶段。**
+
 ## 命令修订与浏览器验收交接（2026-09-07）
 
 本次仅更新文档：Windows 命令已改为单行，不再使用反斜杠续行。
