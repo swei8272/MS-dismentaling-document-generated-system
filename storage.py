@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 import os
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path, PurePath
 
 from PIL import Image, UnidentifiedImageError
@@ -25,13 +25,51 @@ class UploadValidationError(ValueError):
     pass
 
 
-@dataclass(frozen=True)
+class UploadIdentityError(UploadValidationError):
+    """Raised before canonical storage when an idempotency key names other content."""
+
+
+@dataclass
 class StoredUpload:
     sha256: str
     relative_path: str
     media_type: str
     size_bytes: int
     original_name: str
+    temporary_path: Path = field(repr=False)
+    upload_root: Path = field(repr=False)
+    _finalized_path: Path | None = field(default=None, init=False, repr=False)
+    _created_destination: bool = field(default=False, init=False, repr=False)
+
+    def finalize(self) -> str:
+        """Move verified bytes to canonical storage exactly once.
+
+        The database layer calls this while it holds its write transaction, after
+        revalidating the client id/failure receipt.  Keeping the file staged until
+        that point prevents a losing concurrent request from leaving an orphan.
+        """
+        if self._finalized_path is not None:
+            return self.relative_path
+        destination = self.upload_root / Path(self.relative_path)
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        if destination.exists():
+            self.temporary_path.unlink(missing_ok=True)
+        else:
+            os.replace(self.temporary_path, destination)
+            self._created_destination = True
+        self._finalized_path = destination
+        return self.relative_path
+
+    def rollback_finalized(self) -> None:
+        """Remove only a canonical file created by this uncommitted request."""
+        if self._created_destination and self._finalized_path is not None:
+            self._finalized_path.unlink(missing_ok=True)
+        self._created_destination = False
+        self._finalized_path = None
+
+    def discard(self) -> None:
+        """Discard bytes that never became the committed canonical file."""
+        self.temporary_path.unlink(missing_ok=True)
 
 
 def display_filename(filename: str | None) -> str:
@@ -50,6 +88,7 @@ def save_image_stream(
     *,
     max_file_bytes: int | None = None,
     remaining_group_bytes: int | None = None,
+    expected_sha256: str | None = None,
 ) -> StoredUpload:
     original_name = display_filename(upload.filename)
     extension = Path(original_name).suffix.lower()
@@ -89,14 +128,12 @@ def save_image_stream(
             raise UploadValidationError(f"不支持的图片格式：{image_format or '未知'}")
 
         sha256 = digest.hexdigest()
+        if expected_sha256 is not None and sha256 != expected_sha256:
+            raise UploadIdentityError(
+                "该上传标识已经确认过另一张图片，不能重新关联。"
+            )
         canonical_extension = FORMAT_EXTENSIONS[image_format]
         relative = Path(sha256[:2]) / f"{sha256}{canonical_extension}"
-        destination = root / relative
-        destination.parent.mkdir(parents=True, exist_ok=True)
-        if destination.exists():
-            temporary.unlink()
-        else:
-            os.replace(temporary, destination)
         media_type = Image.MIME.get(image_format, f"image/{image_format.lower()}")
         return StoredUpload(
             sha256=sha256,
@@ -104,6 +141,8 @@ def save_image_stream(
             media_type=media_type,
             size_bytes=size,
             original_name=original_name,
+            temporary_path=temporary,
+            upload_root=root,
         )
     except Exception:
         if temporary.exists():

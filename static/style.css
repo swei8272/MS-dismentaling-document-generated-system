@@ -29,13 +29,21 @@ input[type="file"] { margin-right: 12px; }
 .upload-counters strong { color: #101828; }
 progress { width: 100%; height: 14px; }
 .local-file-list { border: 1px solid #e4e7ec; border-radius: 8px; overflow: hidden; }
-.local-file-row { display: grid; grid-template-columns: minmax(160px, 2fr) 100px 120px minmax(200px, 2fr); gap: 12px; padding: 9px 12px; border-bottom: 1px solid #eaecf0; font-size: 13px; }
+.local-file-row { display: grid; grid-template-columns: minmax(160px, 2fr) 100px 120px 150px minmax(200px, 2fr); gap: 12px; padding: 9px 12px; border-bottom: 1px solid #eaecf0; font-size: 13px; }
 .local-file-row:last-child { border-bottom: 0; }
 .local-file-row.failed { background: #fff4f2; }
 .local-file-row.confirmed { background: #ecfdf3; }
 .failure-row { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(240px, 2fr); gap: 16px; padding: 10px 0; border-bottom: 1px solid #eaecf0; }
 .failure-row:last-child { border-bottom: 0; }
-.failure-row span { color: #b42318; }
+.failure-row strong, .failure-row small, .failure-row span { display: block; }
+.failure-row small { margin: 4px 0; color: #667085; }
+.failure-row > div > span { color: #b42318; }
+.failure-retry-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.failure-retry-controls input[type="file"] { max-width: 310px; }
+.failure-sync-state.pending { color: #b54708; font-weight: 600; }
+.failure-sync-state.saved { color: #027a48; font-weight: 600; }
+.pending-sync { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.pending-sync[hidden] { display: none; }
 .pagination { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 16px; }
 .pagination.compact .button { padding: 6px 10px; font-size: 13px; }
 .button:disabled { opacity: .5; cursor: not-allowed; }
@@ -65,4 +73,5 @@ th { background: #f9fafb; color: #475467; font-size: 13px; }
   .page-heading { align-items: flex-start; }
   .local-file-row { grid-template-columns: 1fr 90px; }
   .local-file-row span:last-child { grid-column: 1 / -1; }
+  .failure-row { grid-template-columns: 1fr; }
 }

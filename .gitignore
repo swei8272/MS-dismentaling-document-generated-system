@@ -10,7 +10,7 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 .pytest-tmp*/
-.phase2-validation/
+.phase2-validation*/
 .coverage
 htmlcov/
 

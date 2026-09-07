@@ -6,6 +6,7 @@ import hashlib
 import json
 import math
 import os
+import platform
 import socket
 import sys
 import time
@@ -15,6 +16,7 @@ import urllib.parse
 import urllib.request
 import uuid
 from http.client import HTTPConnection
+from datetime import datetime, timezone
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageOps
@@ -65,9 +67,17 @@ def inspect_images(output: Path) -> dict:
     }
 
 
-def process_working_set_bytes() -> int | None:
+def utc_timestamp(epoch: float | None = None) -> str:
+    value = datetime.fromtimestamp(epoch, timezone.utc) if epoch is not None else datetime.now(timezone.utc)
+    return value.isoformat(timespec="milliseconds")
+
+
+def process_memory_counters() -> dict[str, int | None]:
     if os.name != "nt":
-        return None
+        return {
+            "process_working_set_bytes": None,
+            "process_peak_working_set_bytes": None,
+        }
 
     class ProcessMemoryCounters(ctypes.Structure):
         _fields_ = [
@@ -98,15 +108,22 @@ def process_working_set_bytes() -> int | None:
     if not get_memory_info(
         handle, ctypes.byref(counters), counters.cb
     ):
-        return None
-    return int(counters.WorkingSetSize)
+        return {
+            "process_working_set_bytes": None,
+            "process_peak_working_set_bytes": None,
+        }
+    return {
+        "process_working_set_bytes": int(counters.WorkingSetSize),
+        "process_peak_working_set_bytes": int(counters.PeakWorkingSetSize),
+    }
 
 
 def serve_validation(root: Path, port: int) -> None:
-    from flask import jsonify
+    from flask import jsonify, request
     from waitress import serve
 
     from app import create_app
+    from database import database_connection
 
     root.mkdir(parents=True, exist_ok=True)
     tracemalloc.start()
@@ -122,9 +139,45 @@ def serve_validation(root: Path, port: int) -> None:
     def validation_metrics():
         current, peak = tracemalloc.get_traced_memory()
         return jsonify(
-            process_working_set_bytes=process_working_set_bytes(),
+            **process_memory_counters(),
             traced_current_bytes=current,
             traced_peak_bytes=peak,
+        )
+
+    @app.get("/validation/storage-summary")
+    def validation_storage_summary():
+        batch_id = request.args.get("batch_id", type=int)
+        with database_connection(root / "data" / "validation.db") as connection:
+            evidence_count = connection.execute("SELECT COUNT(*) FROM evidence").fetchone()[0]
+            unique_sha256_count = connection.execute(
+                "SELECT COUNT(DISTINCT sha256) FROM evidence"
+            ).fetchone()[0]
+            batch_image_count = connection.execute(
+                "SELECT COUNT(*) FROM batch_images WHERE batch_id = ?", (batch_id,)
+            ).fetchone()[0]
+            unresolved_failure_count = connection.execute(
+                """
+                SELECT COUNT(*) FROM upload_failures
+                WHERE batch_id = ? AND status = 'failed'
+                """,
+                (batch_id,),
+            ).fetchone()[0]
+            receipt_count = connection.execute(
+                "SELECT COUNT(*) FROM upload_receipts WHERE batch_id = ?", (batch_id,)
+            ).fetchone()[0]
+        upload_root = root / "uploads"
+        disk_file_count = sum(
+            1
+            for path in upload_root.rglob("*")
+            if path.is_file() and ".incoming" not in path.parts
+        )
+        return jsonify(
+            evidence_count=evidence_count,
+            unique_sha256_count=unique_sha256_count,
+            batch_image_count=batch_image_count,
+            upload_receipt_count=receipt_count,
+            unresolved_failure_count=unresolved_failure_count,
+            disk_file_count=disk_file_count,
         )
 
     serve(app, host="127.0.0.1", port=port, threads=8)
@@ -150,7 +203,13 @@ def percentile(values: list[float], fraction: float) -> float | None:
     return ordered[max(math.ceil(len(ordered) * fraction) - 1, 0)]
 
 
-def monitor(base_url: str, batch_id: int, stop_file: Path, output: Path) -> None:
+def monitor(
+    base_url: str,
+    batch_id: int,
+    stop_file: Path,
+    output: Path,
+    commit_sha: str | None = None,
+) -> None:
     samples = []
     started = time.time()
     while not stop_file.exists():
@@ -171,14 +230,32 @@ def monitor(base_url: str, batch_id: int, stop_file: Path, output: Path) -> None
         )
         time.sleep(max(0, 1 - (time.time() - sample_started)))
     latencies = [item["latency_ms"] for item in samples if item["http_status"] == 200]
+    ended = time.time()
     report = {
-        "duration_seconds": round(time.time() - started, 3),
+        "validation_commit_sha": commit_sha,
+        "environment": {
+            "platform": platform.platform(),
+            "python": sys.version,
+            "monitor_client": "Python urllib",
+        },
+        "sampling_window": {
+            "started_at_utc": utc_timestamp(started),
+            "ended_at_utc": utc_timestamp(ended),
+            "duration_seconds": round(ended - started, 3),
+        },
         "sample_count": len(samples),
         "http_failures": sum(item["http_status"] != 200 for item in samples),
         "latency_p95_ms": percentile(latencies, 0.95),
         "latency_max_ms": max(latencies) if latencies else None,
-        "server_working_set_peak_bytes": max(
+        "server_sampled_working_set_max_bytes": max(
             (item.get("process_working_set_bytes") or 0 for item in samples), default=0
+        ),
+        "server_process_lifetime_peak_working_set_bytes": max(
+            (item.get("process_peak_working_set_bytes") or 0 for item in samples),
+            default=0,
+        ),
+        "server_process_lifetime_peak_source": (
+            "Windows GetProcessMemoryInfo PROCESS_MEMORY_COUNTERS.PeakWorkingSetSize"
         ),
         "server_traced_peak_bytes": max(
             (item.get("traced_peak_bytes") or 0 for item in samples), default=0
@@ -317,6 +394,7 @@ def upload_images(
     group_size: int,
     output: Path,
     batch_id: int | None = None,
+    commit_sha: str | None = None,
 ) -> None:
     paths = sorted(image_dir.glob("*.jpg"))
     if not paths:
@@ -326,6 +404,7 @@ def upload_images(
     counts = {"added": 0, "reused": 0, "already_in_batch": 0, "failed": 0}
     group_results = []
     tracemalloc.start()
+    started_epoch = time.time()
     started = time.perf_counter()
     for group_index, group in enumerate(groups, start=1):
         body, boundary = multipart_body(group)
@@ -354,17 +433,41 @@ def upload_images(
             }
         )
     elapsed = time.perf_counter() - started
+    ended_epoch = time.time()
     _, client_traced_peak = tracemalloc.get_traced_memory()
     status_payload, _, _ = fetch_json(f"{base_url}/batches/{batch_id}/status")
+    storage_payload, _, storage_status = fetch_json(
+        f"{base_url}/validation/storage-summary?batch_id={batch_id}"
+    )
     report = {
+        "validation_commit_sha": commit_sha,
+        "environment": {
+            "platform": platform.platform(),
+            "python": sys.version,
+            "server": "Waitress",
+            "uploader": "Python HTTP validation client (not browser memory)",
+        },
         "batch_id": batch_id,
-        "elapsed_seconds": round(elapsed, 3),
-        "group_size": group_size,
-        "group_count": len(groups),
+        "upload_window": {
+            "started_at_utc": utc_timestamp(started_epoch),
+            "ended_at_utc": utc_timestamp(ended_epoch),
+            "elapsed_seconds": round(elapsed, 3),
+        },
+        "image_inventory": inspect_images(image_dir),
+        "grouping": {
+            "group_max_files": group_size,
+            "group_max_bytes": 64 * 1024 * 1024,
+            "file_max_bytes": 16 * 1024 * 1024,
+            "group_count": len(groups),
+            "concurrent_requests": 1,
+        },
         "observed_result_counts": counts,
         "server_batch": status_payload.get("batch"),
         "upload_failure_count": status_payload.get("upload_failure_count"),
-        "client_traced_peak_bytes": client_traced_peak,
+        "storage_summary_http_status": storage_status,
+        "storage_summary": storage_payload,
+        "python_uploader_traced_peak_bytes": client_traced_peak,
+        "browser_memory": None,
         "group_results": group_results,
     }
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -425,12 +528,14 @@ def build_parser() -> argparse.ArgumentParser:
     watch.add_argument("batch_id", type=int)
     watch.add_argument("stop_file", type=Path)
     watch.add_argument("output", type=Path)
+    watch.add_argument("--commit-sha")
     upload = subparsers.add_parser("upload")
     upload.add_argument("base_url")
     upload.add_argument("image_dir", type=Path)
     upload.add_argument("output", type=Path)
     upload.add_argument("--group-size", type=int, default=25)
     upload.add_argument("--batch-id", type=int)
+    upload.add_argument("--commit-sha")
     create = subparsers.add_parser("create-batch")
     create.add_argument("base_url")
     mixed = subparsers.add_parser("mixed")
@@ -449,10 +554,21 @@ def main() -> None:
     elif args.command == "serve":
         serve_validation(args.root, args.port)
     elif args.command == "monitor":
-        monitor(args.base_url, args.batch_id, args.stop_file, args.output)
+        monitor(
+            args.base_url,
+            args.batch_id,
+            args.stop_file,
+            args.output,
+            args.commit_sha,
+        )
     elif args.command == "upload":
         upload_images(
-            args.base_url, args.image_dir, args.group_size, args.output, args.batch_id
+            args.base_url,
+            args.image_dir,
+            args.group_size,
+            args.output,
+            args.batch_id,
+            args.commit_sha,
         )
     elif args.command == "create-batch":
         print(create_validation_batch(args.base_url))

@@ -21,6 +21,7 @@
 <section
   class="panel uploader"
   id="batch-uploader"
+  data-batch-id="{{ batch['id'] }}"
   data-upload-url="{{ url_for('batch_upload', batch_id=batch['id']) }}"
   data-status-url="{{ url_for('batch_status', batch_id=batch['id']) }}"
   data-failure-url="{{ url_for('batch_upload_failures', batch_id=batch['id']) }}"
@@ -29,6 +30,9 @@
   data-file-max-bytes="{{ uploader_config['file_max_bytes'] }}"
   data-max-auto-retries="{{ uploader_config['max_auto_retries'] }}"
   data-poll-ms="{{ uploader_config['poll_ms'] }}"
+  data-failure-page-size="{{ upload_failure_page_size }}"
+  data-failure-page-count="{{ upload_failure_page_count }}"
+  data-failure-revision="{{ upload_failure_revision }}"
 >
   <h2>分组上传图片</h2>
   <p>
@@ -37,6 +41,11 @@
     {{ (uploader_config['file_max_bytes'] / 1024 / 1024)|int }} MiB。图片保存后只进入 OCR 队列，不代表识别完成。
   </p>
   <p class="refresh-note">刷新后已保存结果会从服务端恢复；浏览器无法保留尚未确认的本地文件，请重新选择这些文件。重新选择整批图片是安全的，服务端会按内容去重。</p>
+  <div class="refresh-note pending-sync" id="pending-failure-sync" hidden>
+    <strong>待同步：<span id="pending-failure-count">0</span></strong>
+    <span data-sync-message>条失败记录仍待同步到服务端；只保存必要元数据，不保存图片或 File 对象。</span>
+    <button class="button secondary" id="sync-pending-failures" type="button">再次同步</button>
+  </div>
   <form id="batch-upload-form" method="post" action="{{ url_for('batch_upload', batch_id=batch['id']) }}" enctype="multipart/form-data">
     <input id="batch-files" type="file" name="files" accept=".jpg,.jpeg,.png,.webp,.bmp,.tif,.tiff" multiple required>
     <button class="button" id="start-upload" type="submit">开始上传</button>
@@ -61,14 +70,21 @@
 
 <section class="panel" id="upload-failure-panel"{% if not upload_failures %} hidden{% endif %}>
   <h2>上传失败记录 <span id="upload-failure-count">{{ upload_failure_count }}</span></h2>
-  <p>这些记录属于文件传输或格式校验，不会创建 evidence，也不计入 OCR 失败。</p>
+  <p>这些记录属于文件传输或格式校验，不会创建 evidence，也不计入 OCR 失败。请在对应记录上明确选择替换文件；系统不会根据文件名或大小自动认定关联。</p>
   <div id="upload-failure-list">
     {% for failure in upload_failures %}
     <div class="failure-row" data-failure-id="{{ failure['id'] }}" data-client-id="{{ failure['client_id'] }}" data-size="{{ failure['size_bytes'] if failure['size_bytes'] is not none else '' }}">
-      <strong>{{ failure['original_name'] }}</strong>
-      <span>{{ failure['reason'] }}</span>
+      <div>
+        <strong>{{ failure['original_name'] }}</strong>
+        <small>记录 #{{ failure['id'] }}{% if failure['size_bytes'] is not none %} · 原大小 {{ failure['size_bytes'] }} bytes{% endif %}</small>
+        <span>{{ failure['reason'] }}</span>
+      </div>
+      <div class="failure-retry-controls"><span>正在加载重试操作…</span></div>
     </div>
     {% endfor %}
+  </div>
+  <div class="pagination compact" id="upload-failure-pagination">
+    {% if upload_failure_page_count > 1 %}<span>第 1 / {{ upload_failure_page_count }} 页</span>{% endif %}
   </div>
 </section>
 
@@ -101,5 +117,6 @@
   </nav>
   {% endif %}
 </section>
+<script src="{{ url_for('static', filename='batch_upload_state.js') }}" defer></script>
 <script src="{{ url_for('static', filename='batch_upload.js') }}" defer></script>
 {% endblock %}

@@ -7,6 +7,7 @@ from flask import Flask, abort, flash, jsonify, redirect, render_template, reque
 
 from config import Config
 from database import (
+    UploadAssociationError,
     attach_uploaded_evidence,
     count_batch_images,
     count_upload_failures,
@@ -14,6 +15,9 @@ from database import (
     database_connection,
     get_batch,
     get_batch_with_stats,
+    get_expected_upload_sha256,
+    get_upload_failure_summary,
+    get_upload_failures_page,
     list_batch_images_page,
     list_batches,
     list_upload_failures,
@@ -22,7 +26,12 @@ from database import (
     refresh_batch,
     set_batch_uploading,
 )
-from storage import UploadValidationError, display_filename, save_image_stream
+from storage import (
+    UploadIdentityError,
+    UploadValidationError,
+    display_filename,
+    save_image_stream,
+)
 
 
 STATUS_LABELS = {
@@ -79,13 +88,27 @@ def create_app(test_config: dict | None = None) -> Flask:
         images = list_batch_images_page(
             _database_path(app), batch_id, limit=page_size, offset=(page - 1) * page_size
         )
-        upload_failures = list_upload_failures(_database_path(app), batch_id)
+        failure_page_size = 25
+        upload_failure_count, upload_failure_latest_id = get_upload_failure_summary(
+            _database_path(app), batch_id
+        )
+        upload_failures = list_upload_failures(
+            _database_path(app), batch_id, limit=failure_page_size
+        )
         return render_template(
             "batch_detail.html",
             batch=batch,
             images=images,
             upload_failures=upload_failures,
-            upload_failure_count=count_upload_failures(_database_path(app), batch_id),
+            upload_failure_count=upload_failure_count,
+            upload_failure_page_size=failure_page_size,
+            upload_failure_page_count=max(
+                (upload_failure_count + failure_page_size - 1) // failure_page_size,
+                1,
+            ),
+            upload_failure_revision=(
+                f"{upload_failure_count}:{upload_failure_latest_id or 0}"
+            ),
             page=page,
             page_count=page_count,
             uploader_config={
@@ -102,12 +125,13 @@ def create_app(test_config: dict | None = None) -> Flask:
         batch = get_batch_with_stats(_database_path(app), batch_id)
         if batch is None:
             abort(404)
+        failure_total, failure_latest_id = get_upload_failure_summary(
+            _database_path(app), batch_id
+        )
         return jsonify(
             batch=dict(batch),
-            upload_failure_count=count_upload_failures(_database_path(app), batch_id),
-            upload_failures=[
-                dict(row) for row in list_upload_failures(_database_path(app), batch_id, limit=25)
-            ],
+            upload_failure_count=failure_total,
+            upload_failure_revision=f"{failure_total}:{failure_latest_id or 0}",
         )
 
     @app.get("/batches/<int:batch_id>/images")
@@ -132,16 +156,32 @@ def create_app(test_config: dict | None = None) -> Flask:
             total=total,
         )
 
-    @app.post("/batches/<int:batch_id>/upload-failures")
+    @app.route("/batches/<int:batch_id>/upload-failures", methods=["GET", "POST"])
     def batch_upload_failures(batch_id: int):
         if get_batch(_database_path(app), batch_id) is None:
             abort(404)
+        if request.method == "GET":
+            page = max(request.args.get("page", 1, type=int), 1)
+            per_page = min(max(request.args.get("per_page", 25, type=int), 1), 100)
+            failure_rows, total, page, page_count = get_upload_failures_page(
+                _database_path(app),
+                batch_id,
+                page=page,
+                per_page=per_page,
+            )
+            return jsonify(
+                items=[dict(row) for row in failure_rows],
+                page=page,
+                per_page=per_page,
+                page_count=page_count,
+                total=total,
+            )
         payload = request.get_json(silent=True) or {}
         items = payload.get("items")
         if not isinstance(items, list) or len(items) > 1_000:
             return jsonify(error="失败记录格式无效。"), 400
         seen: set[str] = set()
-        results = []
+        validated = []
         for item in items:
             if not isinstance(item, dict):
                 return jsonify(error="失败记录格式无效。"), 400
@@ -161,16 +201,45 @@ def create_app(test_config: dict | None = None) -> Flask:
             else:
                 reason = "浏览器未上传该文件，请重新选择后重试。"
                 retryable = False
+            validated.append(
+                (
+                    client_id,
+                    display_filename(str(item.get("name") or "")),
+                    size_bytes,
+                    reason,
+                    retryable,
+                )
+            )
+
+        results = []
+        for client_id, original_name, size_bytes, reason, retryable in validated:
             failure_id = record_upload_failure(
                 _database_path(app),
                 batch_id=batch_id,
                 client_id=client_id,
-                original_name=display_filename(str(item.get("name") or "")),
+                original_name=original_name,
                 size_bytes=size_bytes,
                 reason=reason,
                 retryable=retryable,
             )
-            results.append({"client_id": client_id, "failure_id": failure_id, "reason": reason})
+            if failure_id is None:
+                results.append(
+                    {
+                        "client_id": client_id,
+                        "failure_id": None,
+                        "sync_status": "already_confirmed",
+                        "reason": "服务端已经确认或解决该文件，未创建新的失败记录。",
+                    }
+                )
+            else:
+                results.append(
+                    {
+                        "client_id": client_id,
+                        "failure_id": failure_id,
+                        "sync_status": "saved",
+                        "reason": reason,
+                    }
+                )
         return jsonify(results=results)
 
     @app.post("/batches/<int:batch_id>/upload")
@@ -200,6 +269,8 @@ def create_app(test_config: dict | None = None) -> Flask:
                 return jsonify(error="每个文件必须使用请求内唯一标识。"), 400
         else:
             client_ids = [f"legacy-{uuid.uuid4().hex}" for _item in items]
+        if _json_requested() and failure_ids and len(failure_ids) != len(items):
+            return jsonify(error="失败记录标识数量必须与文件数量一致。"), 400
         if len(failure_ids) != len(items):
             failure_ids = [""] * len(items)
         if len(declared_sizes) != len(items):
@@ -217,6 +288,16 @@ def create_app(test_config: dict | None = None) -> Flask:
                 original_name = display_filename(item.filename)
                 reported_size = _nonnegative_int_or_none(declared_sizes[index])
                 try:
+                    failure_reference = failure_ids[index].strip()
+                    failure_id = _positive_int_or_none(failure_reference)
+                    if failure_reference and failure_id is None:
+                        raise UploadAssociationError("失败记录标识无效。")
+                    expected_sha256 = get_expected_upload_sha256(
+                        _database_path(app),
+                        batch_id=batch_id,
+                        client_id=client_id,
+                        failure_id=failure_id,
+                    )
                     if index >= int(app.config["UPLOAD_GROUP_MAX_FILES"]):
                         raise UploadValidationError(
                             f"每组最多上传 {app.config['UPLOAD_GROUP_MAX_FILES']} 张图片"
@@ -227,20 +308,27 @@ def create_app(test_config: dict | None = None) -> Flask:
                         max_file_bytes=int(app.config["UPLOAD_FILE_MAX_BYTES"]),
                         remaining_group_bytes=int(app.config["UPLOAD_GROUP_MAX_BYTES"])
                         - group_bytes,
+                        expected_sha256=expected_sha256,
                     )
                     group_bytes += stored.size_bytes
-                    failure_id = _positive_int_or_none(failure_ids[index])
-                    evidence_id, evidence_created, relation_created = attach_uploaded_evidence(
-                        _database_path(app),
-                        batch_id=batch_id,
-                        sha256=stored.sha256,
-                        stored_path=stored.relative_path,
-                        media_type=stored.media_type,
-                        size_bytes=stored.size_bytes,
-                        original_name=stored.original_name,
-                        upload_failure_id=failure_id,
-                        upload_failure_client_id=client_id,
-                    )
+                    try:
+                        evidence_id, evidence_created, relation_created = (
+                            attach_uploaded_evidence(
+                                _database_path(app),
+                                batch_id=batch_id,
+                                sha256=stored.sha256,
+                                stored_path=stored.relative_path,
+                                media_type=stored.media_type,
+                                size_bytes=stored.size_bytes,
+                                original_name=stored.original_name,
+                                upload_failure_id=failure_id,
+                                upload_failure_client_id=client_id,
+                                finalize_storage=stored.finalize,
+                                rollback_storage=stored.rollback_finalized,
+                            )
+                        )
+                    finally:
+                        stored.discard()
                     if not relation_created:
                         status = "already_in_batch"
                         skipped += 1
@@ -265,6 +353,17 @@ def create_app(test_config: dict | None = None) -> Flask:
                                 _database_path(app), evidence_id
                             ),
                         }
+                    )
+                except (UploadAssociationError, UploadIdentityError) as exc:
+                    skipped += 1
+                    results.append(
+                        _failed_result(
+                            client_id,
+                            original_name,
+                            str(exc),
+                            False,
+                            None,
+                        )
                     )
                 except UploadValidationError as exc:
                     skipped += 1
@@ -368,7 +467,11 @@ def _file_limit_message(limit: int) -> str:
 
 
 def _failed_result(
-    client_id: str, name: str, reason: str, retryable: bool, failure_id: int
+    client_id: str,
+    name: str,
+    reason: str,
+    retryable: bool,
+    failure_id: int | None,
 ) -> dict:
     return {
         "client_id": client_id,

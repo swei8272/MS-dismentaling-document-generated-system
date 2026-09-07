@@ -4,6 +4,11 @@
   const root = document.getElementById("batch-uploader");
   if (!root) return;
 
+  const stateApi = window.DgmBatchUploadState;
+  if (!stateApi) {
+    throw new Error("批次上传状态模块未加载");
+  }
+
   const form = document.getElementById("batch-upload-form");
   const input = document.getElementById("batch-files");
   const startButton = document.getElementById("start-upload");
@@ -16,8 +21,13 @@
   const failurePanel = document.getElementById("upload-failure-panel");
   const failureCount = document.getElementById("upload-failure-count");
   const failureList = document.getElementById("upload-failure-list");
+  const failurePagination = document.getElementById("upload-failure-pagination");
+  const pendingSyncSummary = document.getElementById("pending-failure-sync");
+  const pendingSyncCount = document.getElementById("pending-failure-count");
+  const syncFailuresButton = document.getElementById("sync-pending-failures");
 
   const settings = {
+    batchId: root.dataset.batchId,
     uploadUrl: root.dataset.uploadUrl,
     statusUrl: root.dataset.statusUrl,
     failureUrl: root.dataset.failureUrl,
@@ -26,19 +36,31 @@
     fileMaxBytes: Number(root.dataset.fileMaxBytes),
     maxAutoRetries: Number(root.dataset.maxAutoRetries),
     pollMs: Number(root.dataset.pollMs),
+    failurePageSize: Number(root.dataset.failurePageSize),
   };
   const pageSize = 50;
+  const outboxKey = "dgm:batch-upload-failures:" + settings.batchId;
   const items = [];
   let localPage = 1;
+  let failurePage = 1;
+  let failurePageCount = Number(root.dataset.failurePageCount) || 1;
+  let failureRevision = root.dataset.failureRevision || "";
   let running = false;
   let pollInFlight = false;
-  let knownFailures = Array.from(failureList.querySelectorAll(".failure-row")).map((row) => ({
-    id: Number(row.dataset.failureId),
-    clientId: row.dataset.clientId,
-    name: row.querySelector("strong").textContent,
-    size: row.dataset.size === "" ? null : Number(row.dataset.size),
-    claimed: false,
-  }));
+  let failureFetchInFlight = false;
+  let failureReloadQueued = false;
+  let failurePageDirty = true;
+  let desiredFailurePage = 1;
+  let desiredFailureRevision = failureRevision;
+  let failureSyncInFlight = false;
+  let failureSyncQueued = false;
+  let healthyRecoveryBudget = 0;
+  let failureRecoveryTimer = null;
+  let failureFetchFailureCount = 0;
+  let failureNextRetryAt = 0;
+  let storageAvailable = true;
+  let failureOutbox = [];
+  const requestTimeoutMs = 15000;
 
   const labels = {
     waiting: "等待上传",
@@ -51,12 +73,103 @@
 
   function createId() {
     if (window.crypto && window.crypto.randomUUID) return window.crypto.randomUUID();
-    return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    return String(Date.now()) + "-" + Math.random().toString(16).slice(2);
   }
 
   function formatBytes(bytes) {
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KiB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MiB`;
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KiB";
+    return (bytes / (1024 * 1024)).toFixed(1) + " MiB";
+  }
+
+  function delay(milliseconds) {
+    return new Promise((resolve) => window.setTimeout(resolve, milliseconds));
+  }
+
+  async function fetchWithTimeout(url, options) {
+    if (typeof window.AbortController !== "function") {
+      return fetch(url, options);
+    }
+    const controller = new window.AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), requestTimeoutMs);
+    try {
+      return await fetch(url, { ...(options || {}), signal: controller.signal });
+    } catch (error) {
+      if (error && error.name === "AbortError") {
+        const timeoutError = new Error("请求超时，结果尚未确认");
+        timeoutError.retryable = true;
+        throw timeoutError;
+      }
+      if (error && typeof error.retryable === "undefined") {
+        error.retryable = true;
+      }
+      throw error;
+    } finally {
+      window.clearTimeout(timeout);
+    }
+  }
+
+  function loadFailureOutbox() {
+    try {
+      const saved = window.localStorage.getItem(outboxKey);
+      return stateApi.normalizeOutbox(saved ? JSON.parse(saved) : []);
+    } catch (_error) {
+      storageAvailable = false;
+      return [];
+    }
+  }
+
+  function saveFailureOutbox() {
+    try {
+      if (failureOutbox.length) {
+        window.localStorage.setItem(outboxKey, stateApi.serializeOutbox(failureOutbox));
+      } else {
+        window.localStorage.removeItem(outboxKey);
+      }
+      storageAvailable = true;
+    } catch (_error) {
+      storageAvailable = false;
+    }
+    updatePendingSyncSummary();
+  }
+
+  function updatePendingSyncSummary() {
+    pendingSyncCount.textContent = String(failureOutbox.length);
+    pendingSyncSummary.hidden = failureOutbox.length === 0 && storageAvailable;
+    syncFailuresButton.disabled = failureSyncInFlight || failureOutbox.length === 0;
+    if (!storageAvailable) {
+      pendingSyncSummary.hidden = false;
+      pendingSyncSummary.querySelector("[data-sync-message]").textContent =
+        "浏览器无法保存待同步元数据；请保持本页打开并重新尝试。";
+    } else if (failureOutbox.length) {
+      pendingSyncSummary.querySelector("[data-sync-message]").textContent =
+        "条失败记录仍待同步到服务端；这里只保存文件名、大小和标识，不保存图片或 File 对象。";
+    }
+  }
+
+  function restoreOutboxItems() {
+    for (const entry of failureOutbox) {
+      if (items.some((item) => item.id === entry.clientId)) continue;
+      items.push({
+        id: entry.clientId,
+        file: null,
+        name: entry.name,
+        size: entry.size,
+        state: "failed",
+        detail: "仅恢复了失败元数据；本地文件未保留，请重新选择文件。",
+        retryable: true,
+        failureId: null,
+        syncState: "pending",
+      });
+    }
+    dashboard.hidden = items.length === 0;
+  }
+
+  function removeOutboxClient(clientId) {
+    const next = failureOutbox.filter((entry) => entry.clientId !== clientId);
+    if (next.length !== failureOutbox.length) {
+      failureOutbox = next;
+      saveFailureOutbox();
+    }
   }
 
   function addSelection(files) {
@@ -71,22 +184,12 @@
         detail: "等待分组",
         retryable: true,
         failureId: null,
+        syncState: null,
       };
-      const priorFailure = knownFailures.find(
-        (failure) =>
-          !failure.claimed && failure.name === file.name &&
-          (failure.size === null || failure.size === file.size)
-      );
-      if (priorFailure) {
-        priorFailure.claimed = true;
-        item.id = priorFailure.clientId || item.id;
-        item.failureId = priorFailure.id;
-        item.detail = "已关联刷新前的失败记录，上传成功后将自动解决。";
-      }
       if (file.size > settings.fileMaxBytes) {
         item.state = "failed";
         item.retryable = false;
-        item.detail = `单个文件不能超过 ${formatBytes(settings.fileMaxBytes)}`;
+        item.detail = "单个文件不能超过 " + formatBytes(settings.fileMaxBytes);
         rejected.push(item);
       }
       items.push(item);
@@ -94,65 +197,153 @@
     localPage = Math.max(Math.ceil(items.length / pageSize), 1);
     dashboard.hidden = items.length === 0;
     render();
-    if (rejected.length) persistClientFailures(rejected, "client_rejected");
+    if (rejected.length) queueClientFailures(rejected, "client_rejected");
   }
 
-  async function persistClientFailures(rejected, kind) {
-    try {
-      const response = await fetch(settings.failureUrl, {
+  function queueClientFailures(rejected, kind) {
+    const additions = rejected.map((item) => ({
+      clientId: item.id,
+      name: item.name,
+      size: item.size,
+      kind,
+      createdAt: new Date().toISOString(),
+    }));
+    failureOutbox = stateApi.upsertOutbox(failureOutbox, additions);
+    healthyRecoveryBudget = 1;
+    for (const item of rejected) {
+      item.syncState = "pending";
+      if (!item.detail.includes("待同步")) {
+        item.detail += "；失败记录待同步到服务端";
+      }
+    }
+    saveFailureOutbox();
+    render();
+    return flushFailureOutbox();
+  }
+
+  async function postFailureOutbox() {
+    if (!failureOutbox.length) return;
+    if (window.navigator.onLine === false) {
+      const offlineError = new Error("网络仍未连接");
+      offlineError.retryable = true;
+      throw offlineError;
+    }
+    while (failureOutbox.length) {
+      const syncBatch = failureOutbox.slice(0, 100);
+      const response = await fetchWithTimeout(settings.failureUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify({
-          items: rejected.map((item) => ({
-            client_id: item.id,
-            name: item.name,
-            size_bytes: item.size,
-            kind,
+          items: syncBatch.map((entry) => ({
+            client_id: entry.clientId,
+            name: entry.name,
+            size_bytes: entry.size,
+            kind: entry.kind,
           })),
         }),
       });
-      if (!response.ok) return;
+      if (!response.ok) {
+        const requestError = new Error("失败记录同步返回 HTTP " + response.status);
+        requestError.retryable =
+          response.status === 408 ||
+          response.status === 429 ||
+          response.status >= 500;
+        throw requestError;
+      }
       const payload = await response.json();
-      const byId = new Map(payload.results.map((result) => [result.client_id, result]));
-      for (const item of rejected) {
-        const result = byId.get(item.id);
-        if (result) {
-          item.failureId = result.failure_id;
-          if (!knownFailures.some((failure) => failure.id === result.failure_id)) {
-            knownFailures.push({
-              id: result.failure_id,
-              clientId: item.id,
-              name: item.name,
-              size: item.size,
-              claimed: true,
-            });
-          }
+      const partition = stateApi.partitionSyncResults(
+        syncBatch,
+        payload.results || []
+      );
+      if (partition.remaining.length) {
+        const incompleteError = new Error("服务端未确认全部失败记录");
+        incompleteError.retryable = true;
+        throw incompleteError;
+      }
+      const acknowledgedIds = new Set(
+        partition.acknowledgements.map((entry) => entry.clientId)
+      );
+      failureOutbox = failureOutbox.filter(
+        (entry) => !acknowledgedIds.has(entry.clientId)
+      );
+      for (const acknowledgement of partition.acknowledgements) {
+        const item = items.find(
+          (candidate) => candidate.id === acknowledgement.clientId
+        );
+        if (!item) continue;
+        if (acknowledgement.syncStatus === "already_confirmed") {
+          item.state = "confirmed";
+          item.retryable = false;
+          item.failureId = null;
+          item.syncState = null;
+          item.detail =
+            acknowledgement.reason ||
+            "服务端此前已经确认，迟到的失败记录没有重新创建。";
+        } else if (item.state !== "confirmed") {
+          item.failureId = acknowledgement.failureId;
+          item.retryable = true;
+          item.syncState = "saved";
+          item.detail = item.file
+            ? "失败记录已保存到服务端，可手动重试。"
+            : "失败记录已保存到服务端；本地文件未保留，请在失败记录中重新选择。";
         }
       }
+      saveFailureOutbox();
       render();
-      pollStatus();
-    } catch (_error) {
-      // The local error remains visible; a later upload/status poll can recover.
+    }
+    await loadFailurePage(1);
+  }
+
+  async function flushFailureOutbox() {
+    if (!failureOutbox.length) return;
+    if (failureSyncInFlight) {
+      failureSyncQueued = true;
+      return;
+    }
+    failureSyncInFlight = true;
+    failureSyncQueued = false;
+    updatePendingSyncSummary();
+    try {
+      await stateApi.retryWithBackoff(postFailureOutbox, {
+        maxRetries: settings.maxAutoRetries,
+        baseDelayMs: 500,
+        wait: delay,
+      });
+      if (!failureOutbox.length) {
+        message.textContent = "待同步的失败记录已由服务端确认。";
+      }
+    } catch (error) {
+      message.textContent =
+        "仍有失败记录待同步；网络恢复后会有限重试，也可点击“再次同步”。" +
+        (error && error.message ? "（" + error.message + "）" : "");
+      if (
+        failureOutbox.length &&
+        healthyRecoveryBudget > 0 &&
+        failureRecoveryTimer === null
+      ) {
+        healthyRecoveryBudget -= 1;
+        failureRecoveryTimer = window.setTimeout(() => {
+          failureRecoveryTimer = null;
+          flushFailureOutbox();
+        }, 4000);
+      }
+    } finally {
+      failureSyncInFlight = false;
+      updatePendingSyncSummary();
+      render();
+      if (failureSyncQueued && failureOutbox.length) {
+        failureSyncQueued = false;
+        window.setTimeout(flushFailureOutbox, 0);
+      }
     }
   }
 
   function makeGroups(selected) {
-    const groups = [];
-    let group = [];
-    let bytes = 0;
-    for (const item of selected) {
-      const wouldOverflow =
-        group.length >= settings.groupMaxFiles || bytes + item.size > settings.groupMaxBytes;
-      if (group.length && wouldOverflow) {
-        groups.push(group);
-        group = [];
-        bytes = 0;
-      }
-      group.push(item);
-      bytes += item.size;
-    }
-    if (group.length) groups.push(group);
-    return groups;
+    return stateApi.makeGroups(
+      selected,
+      settings.groupMaxFiles,
+      settings.groupMaxBytes
+    );
   }
 
   function requestGroup(group) {
@@ -175,10 +366,13 @@
       xhr.timeout = 120000;
       xhr.upload.addEventListener("progress", (event) => {
         if (!event.lengthComputable) return;
-        const percent = Math.min(Math.round((event.loaded / event.total) * 100), 100);
+        const transferComplete = event.loaded >= event.total;
+        const percent = transferComplete
+          ? 100
+          : Math.min(Math.floor((event.loaded / event.total) * 100), 99);
         progress.value = percent;
-        for (const item of group) item.detail = `已传输 ${percent}%`;
-        if (percent === 100) {
+        for (const item of group) item.detail = "已传输 " + percent + "%";
+        if (transferComplete) {
           for (const item of group) {
             item.state = "confirming";
             item.detail = "字节已传完，服务器确认中";
@@ -199,39 +393,52 @@
           return;
         }
         reject({
-          retryable: xhr.status === 0 || xhr.status === 408 || xhr.status === 429 || xhr.status >= 500,
-          message: payload && payload.error ? payload.error : `服务器返回 HTTP ${xhr.status || "错误"}`,
+          retryable:
+            xhr.status === 0 ||
+            xhr.status === 408 ||
+            xhr.status === 429 ||
+            xhr.status >= 500,
+          message:
+            payload && payload.error
+              ? payload.error
+              : "服务器返回 HTTP " + (xhr.status || "错误"),
         });
       });
-      xhr.addEventListener("error", () => reject({ retryable: true, message: "网络连接中断，结果尚未确认" }));
-      xhr.addEventListener("timeout", () => reject({ retryable: true, message: "上传超时，结果尚未确认" }));
+      xhr.addEventListener("error", () =>
+        reject({ retryable: true, message: "网络连接中断，结果尚未确认" })
+      );
+      xhr.addEventListener("timeout", () =>
+        reject({ retryable: true, message: "上传超时，结果尚未确认" })
+      );
       xhr.send(data);
     });
   }
 
   function applyResponse(group, payload) {
-    const resultById = new Map((payload.results || []).map((result) => [result.client_id, result]));
+    const resultById = new Map(
+      (payload.results || []).map((result) => [result.client_id, result])
+    );
     const retryable = [];
     for (const item of group) {
       const result = resultById.get(item.id);
       if (!result) {
         item.state = "failed";
         item.retryable = true;
+        item.syncState = "pending";
         item.detail = "服务器未返回该文件的确认结果";
         retryable.push(item);
       } else if (["added", "reused", "already_in_batch"].includes(result.status)) {
-        const resolvedFailureId = item.failureId;
         item.state = "confirmed";
         item.retryable = false;
         item.failureId = null;
+        item.syncState = null;
         item.detail = result.message;
-        if (resolvedFailureId) {
-          knownFailures = knownFailures.filter((failure) => failure.id !== resolvedFailureId);
-        }
+        removeOutboxClient(item.id);
       } else {
         item.state = "failed";
         item.retryable = Boolean(result.retryable);
         item.failureId = result.failure_id || item.failureId;
+        item.syncState = item.failureId ? "saved" : "pending";
         item.detail = result.message || "保存失败";
         if (item.retryable) retryable.push(item);
       }
@@ -240,23 +447,31 @@
     return retryable;
   }
 
-  function delay(milliseconds) {
-    return new Promise((resolve) => window.setTimeout(resolve, milliseconds));
-  }
-
   async function uploadGroup(group, groupNumber, groupTotal) {
     let pending = group;
-    for (let attempt = 0; attempt <= settings.maxAutoRetries && pending.length; attempt += 1) {
+    for (
+      let attempt = 0;
+      attempt <= settings.maxAutoRetries && pending.length;
+      attempt += 1
+    ) {
       if (attempt > 0) {
         for (const item of pending) {
           item.state = "retrying";
-          item.detail = `第 ${attempt} 次自动重试`;
+          item.detail = "第 " + attempt + " 次自动重试";
         }
-        message.textContent = `第 ${groupNumber}/${groupTotal} 组暂时失败，退避后重试……`;
+        message.textContent =
+          "第 " + groupNumber + "/" + groupTotal + " 组暂时失败，退避后重试……";
         render();
-        await delay(500 * 2 ** (attempt - 1));
+        await delay(500 * Math.pow(2, attempt - 1));
       } else {
-        message.textContent = `正在上传第 ${groupNumber}/${groupTotal} 组（${pending.length} 张）`;
+        message.textContent =
+          "正在上传第 " +
+          groupNumber +
+          "/" +
+          groupTotal +
+          " 组（" +
+          pending.length +
+          " 张）";
       }
       try {
         const payload = await requestGroup(pending);
@@ -265,17 +480,19 @@
         for (const item of pending) {
           item.state = "failed";
           item.retryable = Boolean(error.retryable);
+          item.syncState = "pending";
           item.detail = error.message || "上传失败，结果尚未确认";
         }
         render();
         if (!error.retryable) {
-          await persistClientFailures(pending, "client_rejected");
+          await queueClientFailures(pending, "client_rejected");
+          progress.value = 0;
           return;
         }
       }
     }
     const unknown = pending.filter((item) => !item.failureId);
-    if (unknown.length) await persistClientFailures(unknown, "transport_unknown");
+    if (unknown.length) await queueClientFailures(unknown, "transport_unknown");
     progress.value = 0;
   }
 
@@ -284,34 +501,65 @@
     running = true;
     startButton.disabled = true;
     retryButton.disabled = true;
+    setFailureControlsDisabled(true);
     const groups = makeGroups(selected);
     try {
       for (let index = 0; index < groups.length; index += 1) {
         await uploadGroup(groups[index], index + 1, groups.length);
       }
-      message.textContent = "本轮上传已结束；“服务端已确认”仅表示图片已保存，不表示 OCR 已完成。";
+      message.textContent =
+        "本轮上传已结束；“服务端已确认”仅表示图片已保存，不表示 OCR 已完成。";
       await pollStatus();
+      await loadFailurePage(1);
     } finally {
       running = false;
       startButton.disabled = false;
+      setFailureControlsDisabled(false);
       render();
+      if (failureReloadQueued || failurePageDirty) {
+        loadFailurePage(desiredFailurePage, desiredFailureRevision);
+      }
+    }
+  }
+
+  function setFailureControlsDisabled(disabled) {
+    for (const row of failureList.querySelectorAll(".failure-row")) {
+      const picker = row.querySelector('input[type="file"]');
+      const retry = row.querySelector("button");
+      if (!picker || !retry) continue;
+      picker.disabled = disabled;
+      retry.disabled =
+        disabled || !(picker.files && picker.files.length);
     }
   }
 
   function updateCounters() {
-    const counts = { total: items.length, confirmed: 0, uploading: 0, waiting: 0, failed: 0, retrying: 0 };
+    const counts = {
+      total: items.length,
+      confirmed: 0,
+      uploading: 0,
+      waiting: 0,
+      failed: 0,
+      retrying: 0,
+    };
     for (const item of items) {
       if (item.state === "confirmed") counts.confirmed += 1;
-      if (item.state === "uploading" || item.state === "confirming") counts.uploading += 1;
+      if (item.state === "uploading" || item.state === "confirming") {
+        counts.uploading += 1;
+      }
       if (item.state === "waiting") counts.waiting += 1;
       if (item.state === "failed") counts.failed += 1;
       if (item.state === "retrying") counts.retrying += 1;
     }
     for (const [key, value] of Object.entries(counts)) {
-      const target = dashboard.querySelector(`[data-upload-count="${key}"]`);
+      const target = dashboard.querySelector('[data-upload-count="' + key + '"]');
       if (target) target.textContent = String(value);
     }
-    retryButton.disabled = running || !items.some((item) => item.state === "failed" && item.retryable && item.file);
+    retryButton.disabled =
+      running ||
+      !items.some(
+        (item) => item.state === "failed" && item.retryable && item.file
+      );
   }
 
   function renderList() {
@@ -321,16 +569,25 @@
     const start = (localPage - 1) * pageSize;
     for (const item of items.slice(start, start + pageSize)) {
       const row = document.createElement("div");
-      row.className = `local-file-row ${item.state}`;
+      row.className = "local-file-row " + item.state;
       const name = document.createElement("strong");
       name.textContent = item.name;
       const size = document.createElement("span");
       size.textContent = formatBytes(item.size);
       const state = document.createElement("span");
       state.textContent = labels[item.state] || item.state;
+      const syncState = document.createElement("span");
+      syncState.className = "failure-sync-state " + (item.syncState || "");
+      if (item.syncState === "pending") {
+        syncState.textContent = "失败记录待同步";
+      } else if (item.syncState === "saved") {
+        syncState.textContent = "失败记录已保存";
+      } else {
+        syncState.textContent = "—";
+      }
       const detail = document.createElement("span");
       detail.textContent = item.detail;
-      row.append(name, size, state, detail);
+      row.append(name, size, state, syncState, detail);
       list.append(row);
     }
     localPagination.replaceChildren();
@@ -340,56 +597,255 @@
     previous.className = "button secondary";
     previous.textContent = "上一段";
     previous.disabled = localPage === 1;
-    previous.addEventListener("click", () => { localPage -= 1; render(); });
+    previous.addEventListener("click", () => {
+      localPage -= 1;
+      render();
+    });
     const label = document.createElement("span");
-    label.textContent = `第 ${localPage} / ${pages} 段`;
+    label.textContent = "第 " + localPage + " / " + pages + " 段";
     const next = document.createElement("button");
     next.type = "button";
     next.className = "button secondary";
     next.textContent = "下一段";
     next.disabled = localPage === pages;
-    next.addEventListener("click", () => { localPage += 1; render(); });
+    next.addEventListener("click", () => {
+      localPage += 1;
+      render();
+    });
     localPagination.append(previous, label, next);
   }
 
   function render() {
     updateCounters();
     renderList();
+    updatePendingSyncSummary();
+  }
+
+  function retryFailureWithFile(failure, file) {
+    if (running) return;
+    let item = stateApi.findRetryItem(items, failure);
+    if (!item) {
+      item = {
+        id: failure.client_id,
+        file,
+        name: file.name,
+        size: file.size,
+        state: "waiting",
+        detail: "已明确关联失败记录 #" + failure.id + "，等待上传替换文件。",
+        retryable: true,
+        failureId: Number(failure.id),
+        syncState: "saved",
+      };
+      items.push(item);
+    } else {
+      item.id = failure.client_id;
+      item.file = file;
+      item.name = file.name;
+      item.size = file.size;
+      item.state = "waiting";
+      item.detail = "已重新选择替换文件，等待上传。";
+      item.retryable = true;
+      item.failureId = Number(failure.id);
+      item.syncState = "saved";
+    }
+    if (file.size > settings.fileMaxBytes) {
+      item.state = "failed";
+      item.retryable = false;
+      item.detail =
+        "替换文件仍超过 " + formatBytes(settings.fileMaxBytes) + "，原失败记录未解决。";
+    }
+    dashboard.hidden = false;
+    localPage = Math.max(Math.ceil(items.length / pageSize), 1);
+    render();
+    if (item.state === "waiting") runQueue([item]);
+  }
+
+  function renderFailureRows(payload) {
+    failureList.replaceChildren();
+    failurePage = payload.page;
+    failurePageCount = payload.page_count;
+    failureCount.textContent = String(payload.total);
+    failurePanel.hidden = payload.total === 0;
+    for (const failure of payload.items) {
+      const row = document.createElement("div");
+      row.className = "failure-row";
+      row.dataset.failureId = failure.id;
+      row.dataset.clientId = failure.client_id;
+
+      const description = document.createElement("div");
+      const name = document.createElement("strong");
+      name.textContent = failure.original_name;
+      const metadata = document.createElement("small");
+      metadata.textContent =
+        "记录 #" +
+        failure.id +
+        (failure.size_bytes === null
+          ? ""
+          : " · 原大小 " + formatBytes(Number(failure.size_bytes)));
+      const reason = document.createElement("span");
+      reason.textContent = failure.reason;
+      description.append(name, metadata, reason);
+
+      const controls = document.createElement("div");
+      controls.className = "failure-retry-controls";
+      const picker = document.createElement("input");
+      picker.type = "file";
+      picker.accept = input.accept;
+      picker.disabled = running;
+      picker.setAttribute(
+        "aria-label",
+        "为失败记录 " + failure.id + " 选择替换文件"
+      );
+      const retry = document.createElement("button");
+      retry.type = "button";
+      retry.className = "button secondary";
+      retry.textContent = "上传此替换文件";
+      retry.disabled = true;
+      picker.addEventListener("change", () => {
+        retry.disabled = running || !(picker.files && picker.files.length);
+      });
+      retry.addEventListener("click", () => {
+        const file = picker.files && picker.files[0];
+        if (file) {
+          picker.value = "";
+          retryFailureWithFile(failure, file);
+        }
+      });
+      controls.append(picker, retry);
+      row.append(description, controls);
+      failureList.append(row);
+    }
+    renderFailurePagination();
+  }
+
+  function renderFailurePagination() {
+    failurePagination.replaceChildren();
+    if (failurePageCount <= 1) return;
+    const previous = document.createElement("button");
+    previous.type = "button";
+    previous.className = "button secondary";
+    previous.textContent = "上一页";
+    previous.disabled = failurePage === 1;
+    previous.addEventListener("click", () => loadFailurePage(failurePage - 1));
+    const label = document.createElement("span");
+    label.textContent = "第 " + failurePage + " / " + failurePageCount + " 页";
+    const next = document.createElement("button");
+    next.type = "button";
+    next.className = "button secondary";
+    next.textContent = "下一页";
+    next.disabled = failurePage === failurePageCount;
+    next.addEventListener("click", () => loadFailurePage(failurePage + 1));
+    failurePagination.append(previous, label, next);
+  }
+
+  async function loadFailurePage(requestedPage, requestedRevision) {
+    desiredFailurePage = Math.max(Number(requestedPage) || 1, 1);
+    if (typeof requestedRevision === "string") {
+      desiredFailureRevision = requestedRevision;
+    }
+    const automaticRequest = typeof requestedRevision === "string";
+    if (automaticRequest && Date.now() < failureNextRetryAt) {
+      failureReloadQueued = true;
+      return false;
+    }
+    const selectedReplacement = Array.from(
+      failureList.querySelectorAll('input[type="file"]')
+    ).some((picker) => picker.files && picker.files.length);
+    if (failureFetchInFlight || running || selectedReplacement) {
+      failureReloadQueued = true;
+      return false;
+    }
+    const pageToLoad = desiredFailurePage;
+    const revisionToApply = desiredFailureRevision;
+    failureReloadQueued = false;
+    failureFetchInFlight = true;
+    let loaded = false;
+    try {
+      const url =
+        settings.failureUrl +
+        "?page=" +
+        pageToLoad +
+        "&per_page=" +
+        settings.failurePageSize;
+      const response = await fetchWithTimeout(url, {
+        headers: { Accept: "application/json" },
+      });
+      if (!response.ok) {
+        failurePageDirty = true;
+        failureFetchFailureCount = Math.min(failureFetchFailureCount + 1, 6);
+        failureNextRetryAt =
+          Date.now() + Math.min(30000, 1000 * Math.pow(2, failureFetchFailureCount - 1));
+        return false;
+      }
+      const payload = await response.json();
+      const selectedDuringRequest = Array.from(
+        failureList.querySelectorAll('input[type="file"]')
+      ).some((picker) => picker.files && picker.files.length);
+      if (selectedDuringRequest) {
+        failurePageDirty = true;
+        failureReloadQueued = true;
+        return false;
+      }
+      renderFailureRows(payload);
+      failurePageDirty = false;
+      failureFetchFailureCount = 0;
+      failureNextRetryAt = 0;
+      failureRevision = revisionToApply;
+      loaded = true;
+    } catch (_error) {
+      failurePageDirty = true;
+      failureFetchFailureCount = Math.min(failureFetchFailureCount + 1, 6);
+      failureNextRetryAt =
+        Date.now() + Math.min(30000, 1000 * Math.pow(2, failureFetchFailureCount - 1));
+    } finally {
+      failureFetchInFlight = false;
+      const reloadStillNeeded =
+        failurePageDirty ||
+        desiredFailurePage !== pageToLoad ||
+        desiredFailureRevision !== failureRevision;
+      if (failureReloadQueued && reloadStillNeeded && !running) {
+        failureReloadQueued = false;
+        const retryDelay = Math.max(failureNextRetryAt - Date.now(), 0);
+        window.setTimeout(() => {
+          loadFailurePage(desiredFailurePage, desiredFailureRevision);
+        }, retryDelay);
+      } else if (!reloadStillNeeded) {
+        failureReloadQueued = false;
+      }
+    }
+    return loaded;
   }
 
   async function pollStatus() {
     if (pollInFlight || document.hidden) return;
     pollInFlight = true;
     try {
-      const response = await fetch(settings.statusUrl, { headers: { Accept: "application/json" } });
+      const response = await fetchWithTimeout(settings.statusUrl, {
+        headers: { Accept: "application/json" },
+      });
       if (!response.ok) return;
       const payload = await response.json();
-      for (const key of ["total", "queued", "processing", "completed", "pending", "failed"]) {
-        const target = document.querySelector(`[data-stat="${key}"]`);
+      for (const key of [
+        "total",
+        "queued",
+        "processing",
+        "completed",
+        "pending",
+        "failed",
+      ]) {
+        const target = document.querySelector('[data-stat="' + key + '"]');
         if (target) target.textContent = String(payload.batch[key] || 0);
       }
       failureCount.textContent = String(payload.upload_failure_count || 0);
       failurePanel.hidden = !payload.upload_failure_count;
-      failureList.replaceChildren();
-      knownFailures = (payload.upload_failures || []).map((failure) => ({
-        id: Number(failure.id),
-        clientId: failure.client_id,
-        name: failure.original_name,
-        size: failure.size_bytes === null ? null : Number(failure.size_bytes),
-        claimed: items.some((item) => item.failureId === Number(failure.id)),
-      }));
-      for (const failure of payload.upload_failures || []) {
-        const row = document.createElement("div");
-        row.className = "failure-row";
-        row.dataset.failureId = failure.id;
-        row.dataset.clientId = failure.client_id;
-        row.dataset.size = failure.size_bytes === null ? "" : failure.size_bytes;
-        const name = document.createElement("strong");
-        name.textContent = failure.original_name;
-        const reason = document.createElement("span");
-        reason.textContent = failure.reason;
-        row.append(name, reason);
-        failureList.append(row);
+      if (
+        payload.upload_failure_revision !== failureRevision ||
+        failurePageDirty
+      ) {
+        await loadFailurePage(
+          failurePage,
+          payload.upload_failure_revision
+        );
       }
     } catch (_error) {
       // Polling is advisory and never starts overlapping requests.
@@ -398,19 +854,45 @@
     }
   }
 
-  input.addEventListener("change", () => addSelection(Array.from(input.files || [])));
+  input.addEventListener("change", () =>
+    addSelection(Array.from(input.files || []))
+  );
   form.addEventListener("submit", (event) => {
     event.preventDefault();
-    runQueue(items.filter((item) => item.state === "waiting"));
+    runQueue(items.filter((item) => item.state === "waiting" && item.file));
   });
   retryButton.addEventListener("click", () => {
-    const retryable = items.filter((item) => item.state === "failed" && item.retryable && item.file);
+    const retryable = items.filter(
+      (item) => item.state === "failed" && item.retryable && item.file
+    );
     for (const item of retryable) {
       item.state = "waiting";
       item.detail = "等待手动重试";
     }
     runQueue(retryable);
   });
+  function requestFailureSync() {
+    if (failureRecoveryTimer !== null) {
+      window.clearTimeout(failureRecoveryTimer);
+      failureRecoveryTimer = null;
+    }
+    healthyRecoveryBudget = 1;
+    flushFailureOutbox();
+  }
+
+  syncFailuresButton.addEventListener("click", requestFailureSync);
+  window.addEventListener("online", requestFailureSync);
   window.setInterval(pollStatus, settings.pollMs);
-  document.addEventListener("visibilitychange", () => { if (!document.hidden) pollStatus(); });
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) pollStatus();
+  });
+
+  failureOutbox = loadFailureOutbox();
+  healthyRecoveryBudget = failureOutbox.length ? 1 : 0;
+  restoreOutboxItems();
+  render();
+  loadFailurePage(1);
+  pollStatus();
+  if (failureOutbox.length) window.setTimeout(flushFailureOutbox, 0);
+  root.dataset.uploaderReady = "true";
 })();
