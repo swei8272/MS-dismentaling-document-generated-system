@@ -3,7 +3,55 @@
 本报告把 2026-09-06 的历史结果与 2026-09-07 审查修复后的结果分开记录。
 全部验证均使用合成图片和隔离数据库，未读取、修改、删除或重建真实业务数据。
 
-## 按 6473329b 执行本机浏览器验收（2026-09-07，当前结果）
+## Sandbox 底层错误核实（2026-09-07，当前结果）
+
+本轮读取实际轮转日志 `%CODEX_HOME%/.sandbox/sandbox.2026-09-07.log`；
+无日期的 `sandbox.log` 不存在。未读取或输出 `.sandbox-secrets`。最新复现为
+2026-09-07T12:17:26.618664900Z：在 `workspace-write` 模式启动只读 `whoami`
+之前，setup helper 失败；命令本身未执行。
+
+- Codex CLI：`0.153.4`，本机二进制目录标识 `8e5b6932251c2c1c`。
+- Codex Desktop 包：`26.901.6511.0`；Windows：`10.0.19045.0`。
+- 失败对象：`D:\Codes\DGM\.git`（普通目录，无重解析链接）。
+- 失败操作：`deny ACE failed`，调用 `SetNamedSecurityInfoW` 设置保护性 DACL。
+- 底层 Win32 错误：`5 / ERROR_ACCESS_DENIED / Access is denied`；helper 退出码 `1`。
+- 随后的 `read-acl-only mode` 返回 `read ACL run completed`。日志没有将
+  `.pytest_cache` 列为本次 setup refresh 失败对象。
+
+### 身份、既有修复及更正
+
+此前用户授权的 `.pytest_cache` 读取修复授予 `LUIGIWIN\swei`（本机 SID 末段
+`1001`）读取/遍历权限，内部条目继承此授权；6 个文件已经验证可读，所有者仍为
+`LUIGIWIN\CodexSandboxOffline`（末段 `1003`）。这与 sandbox 本地账户并非
+同一身份；`CodexSandboxOnline` 的 SID 末段为 `1004`，两者均属于
+`CodexSandboxUsers`。Offline 作为缓存所有者仍保有 OWNER RIGHTS FullControl。
+未实际启动的 sandbox 子进程无法执行 `whoami`；不能把本机 Codex 父进程的
+`swei` 身份误记成已经观测到的 sandbox 子进程身份，也未读取账户凭据验证登录。
+
+当前 Codex 父进程由 `swei` 运行，非提升令牌中 Administrators 仅用于 deny。
+`.git` 所有者是 Offline，DACL 给 Authenticated Users / CodexSandboxUsers
+Modify，给 Administrators FullControl；没有给 `swei` 有效的 ChangePermissions
+授权。Modify 不包含修改 DACL 的 `WRITE_DAC`。结合 helper 的错误，当前证据
+指向 setup 阶段不能为 `.git` 安装拒绝 ACE；未捕获短生命周期 helper 自身令牌，
+其身份沿用父进程是推断。**此前 `.pytest_cache` 是根因的推测已被本轮日志更正。**
+
+### 待授权的最小对象及权限
+
+拟仅在 `D:\Codes\DGM\.git` 目录自身为 `LUIGIWIN\swei` 添加
+`WRITE_DAC / ChangePermissions`（icacls 的 `WDAC`），不设置 `(OI)(CI)`、不使用
+`/T`、不改所有者、不重置现有 ACL。此权限让当前用户进程修改该目录 DACL，目的
+是允许 Codex 正常添加 sandbox 保护性拒绝 ACE；它不是给 sandbox 用户增加写权限。
+由于该目录是 Git 元数据且权限超出已授权的缓存读取修复，本轮未执行该建议。
+执行前需保存该目录当前安全描述符，执行后验证新 sandbox 启动及实际运行身份；
+不能仅凭授权命令返回成功就认定恢复。
+
+诊断发生时 checkout 为 `58178f3a04b74c5e8d215a9b3594394a188a63b1`，程序代码仍为
+`0acd823e7e67684ae4fa9d50fa63aed5fd7f8629`。本轮无程序或数据库迁移变更，未新开
+验证服务，未访问真实数据。浏览器仍无法启动，故没有新截图、页面操作或浏览器
+内存证据，**浏览器验收未完成**。脱敏日志与诊断摘要见
+[raw_sandbox_diagnosis.json](validation/issue4-browser-0acd823/raw_sandbox_diagnosis.json)。
+
+## 按 6473329b 执行本机浏览器验收（2026-09-07，历史尝试）
 
 本轮按提交 `6473329bab725d387bed5501a96e387875bd0adf` 新增的
 [Windows 本机浏览器验收清单](PHASE_2_BROWSER_ACCEPTANCE.md) 执行。运行时

@@ -16,7 +16,10 @@ computer-use 技能初始化受支持的本机浏览器能力并按规定重试�
 本轮所有浏览器场景仍为“未验证”，第二阶段尚未全部通过。原始事实记录见
 [本机 computer-use 尝试](validation/issue4-browser-0acd823/raw_local_computer_use_attempt.json)，
 详细结论见[第二阶段验证报告](PHASE_2_VALIDATION_REPORT.md)。以下清单保留，待
-恢复工作区读取权限后继续执行。
+恢复 sandbox 启动能力后继续执行。后续日志已确认实际失败对象为 `.git`：
+setup helper 添加 deny ACE 时 `SetNamedSecurityInfoW` 返回错误 5；`.pytest_cache`
+的读取 ACL 已在单独授权后修复。详见验证报告顶部的最新诊断，旧的缓存根因推测
+不再成立；修改 `.git` 权限尚待明确授权。
 
 ## 1. 准备独立环境
 
