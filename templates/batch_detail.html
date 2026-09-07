@@ -5,7 +5,7 @@
   <div>
     <a class="back" href="{{ url_for('batch_list') }}">← 返回批次列表</a>
     <h1>{{ batch['name'] }}</h1>
-    <p>{{ batch['batch_no'] }} · 状态：<span class="status {{ batch['status'] }}">{{ status_label[batch['status']] }}</span></p>
+    <p>{{ batch['batch_no'] }} · 状态：<span id="batch-status" data-status-labels='{{ status_label|tojson }}' class="status {{ batch['status'] }}">{{ status_label[batch['status']] }}</span></p>
   </div>
 </div>
 

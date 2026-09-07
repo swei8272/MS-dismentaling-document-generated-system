@@ -42,6 +42,13 @@
     return normalized;
   }
 
+  function applyBatchStatus(badge, status, labels) {
+    // Use the server-rendered label allowlist, never interpret status as HTML.
+    if (!badge || !Object.prototype.hasOwnProperty.call(labels, status)) return;
+    badge.textContent = labels[status];
+    badge.className = "status " + status;
+  }
+
   function upsertOutbox(current, additions) {
     const merged = new Map(
       normalizeOutbox(current).map(function (entry) {
@@ -180,6 +187,7 @@
   }
 
   return Object.freeze({
+    applyBatchStatus,
     createCoalescedRefresh,
     findRetryItem,
     makeGroups,

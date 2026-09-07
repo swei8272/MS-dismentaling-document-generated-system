@@ -26,6 +26,8 @@
   const pendingSyncCount = document.getElementById("pending-failure-count");
   const syncFailuresButton = document.getElementById("sync-pending-failures");
   const imageList = window.DgmBatchImages.mount();
+  const batchStatus = document.getElementById("batch-status");
+  const statusLabels = batchStatus ? JSON.parse(batchStatus.dataset.statusLabels) : {};
 
   const settings = {
     batchId: root.dataset.batchId,
@@ -836,6 +838,7 @@
       const target = document.querySelector('[data-stat="' + key + '"]');
       if (target) target.textContent = String(payload.batch[key] || 0);
     }
+    stateApi.applyBatchStatus(batchStatus, payload.batch.status, statusLabels);
     imageList.refresh();
     failureCount.textContent = String(payload.upload_failure_count || 0);
     failurePanel.hidden = !payload.upload_failure_count;

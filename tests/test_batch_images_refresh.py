@@ -4,6 +4,20 @@ from conftest import image_bytes
 from database import create_batch
 
 
+def test_batch_status_badge_exposes_server_label_map(client, database_path):
+    from html import unescape
+    import json
+    import re
+
+    batch = create_batch(database_path)
+    page = client.get(f"/batches/{batch['id']}").get_data(as_text=True)
+    labels = json.loads(unescape(re.search(r"data-status-labels='([^']+)'", page).group(1)))
+    assert labels['created'] == '已创建'
+    assert labels['queued'] == '排队中'
+    assert labels['completed'] == '已完成'
+    assert 'id="batch-status"' in page
+
+
 def upload(client, batch_id, start, count):
     for index in range(start, start + count):
         response = client.post(

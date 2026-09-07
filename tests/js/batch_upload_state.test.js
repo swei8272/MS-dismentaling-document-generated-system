@@ -22,6 +22,20 @@ function deferred() {
   return { promise, resolve, reject };
 }
 
+test("batch badge follows confirmed server status and rejects unknown labels", () => {
+  const badge = { textContent: "已创建", className: "status created" };
+  const labels = { queued: "排队中", completed: "已完成" };
+  state.applyBatchStatus(badge, "queued", labels);
+  assert.deepEqual(badge, { textContent: "排队中", className: "status queued" });
+  state.applyBatchStatus(badge, "completed", labels);
+  assert.deepEqual(badge, { textContent: "已完成", className: "status completed" });
+  state.applyBatchStatus(badge, "<img onerror=alert(1)>", labels);
+  state.applyBatchStatus(badge, "constructor", labels);
+  assert.equal(badge.className, "status completed");
+  assert.equal(badge.textContent, "已完成");
+  state.applyBatchStatus(null, "queued", labels);
+});
+
 test("groups are bounded by file count and byte total", () => {
   const twentySix = Array.from({ length: 26 }, (_unused, index) => ({
     id: String(index),
