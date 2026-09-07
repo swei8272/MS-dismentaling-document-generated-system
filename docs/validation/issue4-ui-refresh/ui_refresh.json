@@ -1,0 +1,41 @@
+{
+  "validation_date": "2026-09-07",
+  "validation_commit_sha": "26f232093d7e4e90b62f2b6cff1441f9cb725e98",
+  "baseline_commit_sha": "1613ec18dca0fee88a51af53ef17919597cfe747",
+  "environment": {
+    "platform": "Linux",
+    "python": "3.12.13",
+    "node": "24.19.0"
+  },
+  "python_tests": {
+    "passed": 54,
+    "elapsed_seconds": 2.21
+  },
+  "javascript_tests": {
+    "passed": 11
+  },
+  "checks": {
+    "compileall": "passed",
+    "node_syntax": "passed",
+    "pip_check": "No broken requirements found.",
+    "git_diff_check": "passed",
+    "waitress_http": 200,
+    "waitress_contains_chinese_title": true
+  },
+  "browser": {
+    "connected": true,
+    "application_interaction_performed": false,
+    "target_url": "http://127.0.0.1:5055/batches",
+    "errors": [
+      "Transport closed",
+      "net::ERR_BLOCKED_BY_CLIENT"
+    ],
+    "screenshots": [],
+    "memory": null
+  },
+  "windows_current_commit_tested": false,
+  "windows_500_images_rerun": false,
+  "database_migration_added": false,
+  "production_data_accessed": false,
+  "phase2_fully_accepted": false
+}
