@@ -1,0 +1,20 @@
+{
+  "validation_commit_sha": "f0e72dabcf0f8c8a02bd28ffb1fc2456d1600779",
+  "target_url": "http://127.0.0.1:5054/",
+  "page_interaction_performed": false,
+  "screenshots": [],
+  "browser_memory": null,
+  "attempts": [
+    {
+      "surface": "Codex in-app browser",
+      "result": "blocked_before_browser_start",
+      "error": "windows sandbox failed: helper_unknown_error: setup refresh had errors"
+    },
+    {
+      "surface": "supported Chrome browser control runtime",
+      "result": "blocked_before_browser_start",
+      "error": "trusted Node process exited unexpectedly; kernel reset, rerun your request"
+    }
+  ],
+  "related_host_condition": "The pre-existing .pytest_cache directory rejects ACL access; it was not modified or deleted."
+}
