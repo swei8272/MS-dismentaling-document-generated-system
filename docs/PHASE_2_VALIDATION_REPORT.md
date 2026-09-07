@@ -3,6 +3,21 @@
 本报告把 2026-09-06 的历史结果与 2026-09-07 审查修复后的结果分开记录。
 全部验证均使用合成图片和隔离数据库，未读取、修改、删除或重建真实业务数据。
 
+## 命令修订与浏览器验收交接（2026-09-07）
+
+本次仅更新文档：Windows 命令已改为单行，不再使用反斜杠续行。
+规模验证命令中的 `<fresh-stop-file>`、`<raw_monitor.json>` 等仍是历史命令
+参数占位符，不应原样执行或覆盖已提交证据。新一轮浏览器验收使用
+[Windows 本机操作步骤](PHASE_2_BROWSER_ACCEPTANCE.md)，其中提供无占位符的单行准备命令。
+
+本轮用 `0acd823` 代码在临时数据库启动 Waitress，进程内验证 `GET /batches`
+HTTP 200 且包含“批次管理”。云端 Chrome 打开同一本地 URL 时返回
+`net::ERR_BLOCKED_BY_CLIENT`，未发生实际应用交互。验证服务已停止。
+按 control-browser 技能要求，未换用其他浏览器控制通道绕过限制。
+
+程序代码和此前 Windows 测量未改变，本次不重复记入自动化或性能通过次数。
+下一步仍是本机真实浏览器验收，第二阶段尚未全部通过；未合并 PR，未进入第三阶段。
+
 ## 最新状态：按 3413bc6b 补修与 Windows 验收（2026-09-07）
 
 本节是当前结果。验证代码提交为
@@ -33,18 +48,15 @@ OCR、字段提取、车辆合并或任务领取。
 环境：Windows 10 10.0.19045 SP0，Python 3.13.5，Node.js v24.19.0，
 Waitress 3.0.2（8 线程）。
 
-- `.venv\Scripts\python.exe -m pytest -p no:cacheprovider --basetemp
-  .pytest-tmp-0acd823-full`：**56 passed in 70.43s**。原 39 项保留；其中
+- `.venv\Scripts\python.exe -m pytest -p no:cacheprovider --basetemp .pytest-tmp-0acd823-full`：**56 passed in 70.43s**。原 39 项保留；其中
   6 项迁移测试覆盖重复执行、v1/v2→v3 和外键检查。
-- `node --test tests/js/batch_upload_state.test.js
-  tests/js/batch_images.test.js`：**16 passed**。新增覆盖最终状态补读、
+- `node --test tests/js/batch_upload_state.test.js tests/js/batch_images.test.js`：**16 passed**。新增覆盖最终状态补读、
   同页旧响应失效，以及状态/图片两条 Promise settlement-gap。
 - Python `compileall`、三个前端 JavaScript 的 `node --check`、
   `pip check`（No broken requirements found）和 `git diff --check`：通过。
 - Waitress 命令：
 
-      .venv\Scripts\python.exe scripts\phase2_validation.py serve \
-        .phase2-validation-0acd823-20260907-162512\server --port 5056
+      .venv\Scripts\python.exe scripts\phase2_validation.py serve  .phase2-validation-0acd823-20260907-162512\server --port 5056
 
   `GET /batches` 返回 HTTP 200 且包含“批次管理”。验证后只停止该命令的精确
   PID 1536，5056 端口监听数为 0。
@@ -57,13 +69,8 @@ Waitress 3.0.2（8 线程）。
 
 验证命令：
 
-    .venv\Scripts\python.exe scripts\phase2_validation.py monitor \
-      http://127.0.0.1:5056 1 <fresh-stop-file> <raw_monitor.json> \
-      --commit-sha 0acd823e7e67684ae4fa9d50fa63aed5fd7f8629
-    .venv\Scripts\python.exe scripts\phase2_validation.py upload \
-      http://127.0.0.1:5056 .phase2-validation-fix\images <raw_upload.json> \
-      --group-size 25 --batch-id 1 \
-      --commit-sha 0acd823e7e67684ae4fa9d50fa63aed5fd7f8629
+    .venv\Scripts\python.exe scripts\phase2_validation.py monitor  http://127.0.0.1:5056 1 <fresh-stop-file> <raw_monitor.json>  --commit-sha 0acd823e7e67684ae4fa9d50fa63aed5fd7f8629
+    .venv\Scripts\python.exe scripts\phase2_validation.py upload  http://127.0.0.1:5056 .phase2-validation-fix\images <raw_upload.json>  --group-size 25 --batch-id 1  --commit-sha 0acd823e7e67684ae4fa9d50fa63aed5fd7f8629
 
 数据和分组：
 
@@ -266,8 +273,7 @@ Windows 结果重新核对。下方一、二节继续保留更早的 Windows 验
   数据刷新恢复、重复补写/确认幂等、already_confirmed 交错、最多 2 次重试和
   恢复条目复用。
 - Node --check static/batch_upload.js 和 static/batch_upload_state.js：通过。
-- .venv\Scripts\python.exe -m compileall -q app.py config.py database.py
-  storage.py worker.py scripts tests：通过。
+- .venv\Scripts\python.exe -m compileall -q app.py config.py database.py storage.py worker.py scripts tests：通过。
 - .venv\Scripts\python.exe -m pip check：No broken requirements found。
 - git diff --cached --check：通过。
 - 静态扫描只在数据库/Worker 自检定义任务领取；Web 上传和状态路径没有 OCR、
