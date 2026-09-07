@@ -9,16 +9,15 @@ from config import Config
 from database import (
     UploadAssociationError,
     attach_uploaded_evidence,
-    count_batch_images,
     count_upload_failures,
     create_batch,
     database_connection,
     get_batch,
+    get_batch_images_page,
     get_batch_with_stats,
     get_expected_upload_sha256,
     get_upload_failure_summary,
     get_upload_failures_page,
-    list_batch_images_page,
     list_batches,
     list_upload_failures,
     migrate_database,
@@ -80,13 +79,10 @@ def create_app(test_config: dict | None = None) -> Flask:
         batch = get_batch_with_stats(_database_path(app), batch_id)
         if batch is None:
             abort(404)
-        page_size = int(app.config["BATCH_IMAGE_PAGE_SIZE"])
-        page = max(request.args.get("page", 1, type=int), 1)
-        image_total = count_batch_images(_database_path(app), batch_id)
-        page_count = max((image_total + page_size - 1) // page_size, 1)
-        page = min(page, page_count)
-        images = list_batch_images_page(
-            _database_path(app), batch_id, limit=page_size, offset=(page - 1) * page_size
+        image_page = get_batch_images_page(
+            _database_path(app), batch_id,
+            page=request.args.get("page", 1, type=int),
+            per_page=int(app.config["BATCH_IMAGE_PAGE_SIZE"]),
         )
         failure_page_size = 25
         upload_failure_count, upload_failure_latest_id = get_upload_failure_summary(
@@ -98,7 +94,7 @@ def create_app(test_config: dict | None = None) -> Flask:
         return render_template(
             "batch_detail.html",
             batch=batch,
-            images=images,
+            images=image_page["items"],
             upload_failures=upload_failures,
             upload_failure_count=upload_failure_count,
             upload_failure_page_size=failure_page_size,
@@ -109,8 +105,8 @@ def create_app(test_config: dict | None = None) -> Flask:
             upload_failure_revision=(
                 f"{upload_failure_count}:{upload_failure_latest_id or 0}"
             ),
-            page=page,
-            page_count=page_count,
+            page=image_page["page"],
+            page_count=image_page["page_count"],
             uploader_config={
                 "group_max_files": app.config["UPLOAD_GROUP_MAX_FILES"],
                 "group_max_bytes": app.config["UPLOAD_GROUP_MAX_BYTES"],
@@ -136,25 +132,22 @@ def create_app(test_config: dict | None = None) -> Flask:
 
     @app.get("/batches/<int:batch_id>/images")
     def batch_images(batch_id: int):
-        if get_batch(_database_path(app), batch_id) is None:
+        batch = get_batch(_database_path(app), batch_id)
+        if batch is None:
             abort(404)
-        page = max(request.args.get("page", 1, type=int), 1)
-        per_page = min(max(request.args.get("per_page", 50, type=int), 1), 100)
-        total = count_batch_images(_database_path(app), batch_id)
-        return jsonify(
-            items=[
-                dict(row)
-                for row in list_batch_images_page(
-                    _database_path(app),
-                    batch_id,
-                    limit=per_page,
-                    offset=(page - 1) * per_page,
-                )
-            ],
-            page=page,
-            per_page=per_page,
-            total=total,
+        payload = get_batch_images_page(
+            _database_path(app), batch_id,
+            page=request.args.get("page", 1, type=int),
+            per_page=request.args.get(
+                "per_page", int(app.config["BATCH_IMAGE_PAGE_SIZE"]), type=int
+            ),
         )
+        if request.args.get("view") == "table":
+            payload["html"] = render_template(
+                "_batch_images.html", batch=batch, images=payload["items"],
+                page=payload["page"], page_count=payload["page_count"],
+            )
+        return jsonify(payload)
 
     @app.route("/batches/<int:batch_id>/upload-failures", methods=["GET", "POST"])
     def batch_upload_failures(batch_id: int):

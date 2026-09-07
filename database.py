@@ -477,6 +477,38 @@ def list_batch_images_page(
         )
 
 
+def get_batch_images_page(
+    database_path: str | Path, batch_id: int, *, page: int, per_page: int
+) -> dict[str, Any]:
+    """Read the count and bounded page from one snapshot during uploads."""
+    per_page = min(max(per_page, 1), 100)
+    with database_connection(database_path) as connection:
+        connection.execute("BEGIN")
+        total = connection.execute(
+            "SELECT COUNT(*) FROM batch_images WHERE batch_id = ?", (batch_id,)
+        ).fetchone()[0]
+        page_count = max((total + per_page - 1) // per_page, 1)
+        page = min(max(page, 1), page_count)
+        rows = connection.execute(
+            """
+            SELECT bi.original_name, bi.upload_order, bi.created_at,
+                   e.id AS evidence_id, e.processing_status, e.error_message,
+                   e.sha256, e.stored_path
+            FROM batch_images bi JOIN evidence e ON e.id = bi.evidence_id
+            WHERE bi.batch_id = ? ORDER BY bi.upload_order, e.id
+            LIMIT ? OFFSET ?
+            """,
+            (batch_id, per_page, (page - 1) * per_page),
+        ).fetchall()
+        return {
+            "items": [dict(row) for row in rows],
+            "total": total,
+            "page": page,
+            "per_page": per_page,
+            "page_count": page_count,
+        }
+
+
 def count_batch_images(database_path: str | Path, batch_id: int) -> int:
     with database_connection(database_path) as connection:
         return connection.execute(

@@ -25,6 +25,7 @@
   const pendingSyncSummary = document.getElementById("pending-failure-sync");
   const pendingSyncCount = document.getElementById("pending-failure-count");
   const syncFailuresButton = document.getElementById("sync-pending-failures");
+  const imageList = window.DgmBatchImages.mount();
 
   const settings = {
     batchId: root.dataset.batchId,
@@ -516,6 +517,8 @@
       startButton.disabled = false;
       setFailureControlsDisabled(false);
       render();
+      // An in-flight read may predate the final upload: require a follow-up read.
+      imageList.refresh(undefined, { force: true });
       if (failureReloadQueued || failurePageDirty) {
         loadFailurePage(desiredFailurePage, desiredFailureRevision);
       }
@@ -836,6 +839,7 @@
         const target = document.querySelector('[data-stat="' + key + '"]');
         if (target) target.textContent = String(payload.batch[key] || 0);
       }
+      imageList.refresh();
       failureCount.textContent = String(payload.upload_failure_count || 0);
       failurePanel.hidden = !payload.upload_failure_count;
       if (
