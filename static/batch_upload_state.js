@@ -105,6 +105,47 @@
     return groups;
   }
 
+  // Ordinary polling shares the active read. A forced refresh that arrives
+  // during that read schedules exactly one serial follow-up, so callers can
+  // wait for data that was requested after the event they are confirming.
+  function createCoalescedRefresh(operation) {
+    if (typeof operation !== "function") {
+      throw new TypeError("operation must be a function");
+    }
+    let pending = null;
+    let forceQueued = false;
+
+    function refresh(options) {
+      const force = Boolean(options && options.force);
+      if (pending) {
+        if (force) forceQueued = true;
+        return pending;
+      }
+      pending = Promise.resolve()
+        .then(async function () {
+          let lastError;
+          do {
+            // A force queued before this operation starts is already covered
+            // by this later read. Forces received while it awaits I/O remain.
+            forceQueued = false;
+            try {
+              await operation();
+              lastError = undefined;
+            } catch (error) {
+              lastError = error;
+            }
+          } while (forceQueued);
+          if (lastError) throw lastError;
+        })
+        .finally(function () {
+          pending = null;
+        });
+      return pending;
+    }
+
+    return refresh;
+  }
+
   function findRetryItem(items, failure) {
     if (!Array.isArray(items) || !failure) return undefined;
     const failureId = Number(failure.id);
@@ -137,6 +178,7 @@
   }
 
   return Object.freeze({
+    createCoalescedRefresh,
     findRetryItem,
     makeGroups,
     normalizeOutbox,

@@ -12,6 +12,16 @@ const state = require(path.resolve(
   "batch_upload_state.js"
 ));
 
+function deferred() {
+  let resolve;
+  let reject;
+  const promise = new Promise((yes, no) => {
+    resolve = yes;
+    reject = no;
+  });
+  return { promise, resolve, reject };
+}
+
 test("groups are bounded by file count and byte total", () => {
   const twentySix = Array.from({ length: 26 }, (_unused, index) => ({
     id: String(index),
@@ -32,6 +42,57 @@ test("groups are bounded by file count and byte total", () => {
     ),
     [40, 50]
   );
+});
+
+test("status reads coalesce and a final force waits for one serial follow-up", async () => {
+  const reads = [deferred(), deferred()];
+  let calls = 0;
+  let active = 0;
+  let maxActive = 0;
+  const refresh = state.createCoalescedRefresh(async () => {
+    const read = reads[calls++];
+    active += 1;
+    maxActive = Math.max(maxActive, active);
+    await read.promise;
+    active -= 1;
+  });
+
+  const initial = refresh();
+  await Promise.resolve();
+  assert.equal(calls, 1);
+  assert.equal(refresh(), initial);
+  const forced = refresh({ force: true });
+  assert.equal(forced, initial);
+  assert.equal(refresh({ force: true }), initial);
+
+  let settled = false;
+  forced.finally(() => { settled = true; });
+  reads[0].resolve();
+  await reads[0].promise;
+  await Promise.resolve();
+  await Promise.resolve();
+  assert.equal(calls, 2);
+  assert.equal(settled, false);
+
+  reads[1].resolve();
+  await forced;
+  assert.equal(calls, 2);
+  assert.equal(maxActive, 1);
+});
+
+test("a queued forced read still runs after an earlier read fails", async () => {
+  const first = deferred();
+  let calls = 0;
+  const refresh = state.createCoalescedRefresh(async () => {
+    calls += 1;
+    if (calls === 1) await first.promise;
+  });
+  const pending = refresh();
+  await Promise.resolve();
+  refresh({ force: true });
+  first.reject(new Error("temporary status failure"));
+  await pending;
+  assert.equal(calls, 2);
 });
 
 test("refresh normalization keeps only metadata and never a File-like value", () => {

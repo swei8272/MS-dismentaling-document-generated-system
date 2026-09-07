@@ -47,7 +47,6 @@
   let failurePageCount = Number(root.dataset.failurePageCount) || 1;
   let failureRevision = root.dataset.failureRevision || "";
   let running = false;
-  let pollInFlight = false;
   let failureFetchInFlight = false;
   let failureReloadQueued = false;
   let failurePageDirty = true;
@@ -510,7 +509,7 @@
       }
       message.textContent =
         "本轮上传已结束；“服务端已确认”仅表示图片已保存，不表示 OCR 已完成。";
-      await pollStatus();
+      await pollStatus({ force: true });
       await loadFailurePage(1);
     } finally {
       running = false;
@@ -518,7 +517,7 @@
       setFailureControlsDisabled(false);
       render();
       // An in-flight read may predate the final upload: require a follow-up read.
-      imageList.refresh(undefined, { force: true });
+      await imageList.refresh(undefined, { force: true });
       if (failureReloadQueued || failurePageDirty) {
         loadFailurePage(desiredFailurePage, desiredFailureRevision);
       }
@@ -819,43 +818,42 @@
     return loaded;
   }
 
-  async function pollStatus() {
-    if (pollInFlight || document.hidden) return;
-    pollInFlight = true;
-    try {
-      const response = await fetchWithTimeout(settings.statusUrl, {
-        headers: { Accept: "application/json" },
-      });
-      if (!response.ok) return;
-      const payload = await response.json();
-      for (const key of [
-        "total",
-        "queued",
-        "processing",
-        "completed",
-        "pending",
-        "failed",
-      ]) {
-        const target = document.querySelector('[data-stat="' + key + '"]');
-        if (target) target.textContent = String(payload.batch[key] || 0);
-      }
-      imageList.refresh();
-      failureCount.textContent = String(payload.upload_failure_count || 0);
-      failurePanel.hidden = !payload.upload_failure_count;
-      if (
-        payload.upload_failure_revision !== failureRevision ||
-        failurePageDirty
-      ) {
-        await loadFailurePage(
-          failurePage,
-          payload.upload_failure_revision
-        );
-      }
-    } catch (_error) {
-      // Polling is advisory and never starts overlapping requests.
-    } finally {
-      pollInFlight = false;
+  async function readAndApplyStatus() {
+    const response = await fetchWithTimeout(settings.statusUrl, {
+      cache: "no-store",
+      headers: { Accept: "application/json" },
+    });
+    if (!response.ok) throw new Error("批次状态暂时不可用");
+    const payload = await response.json();
+    for (const key of [
+      "total",
+      "queued",
+      "processing",
+      "completed",
+      "pending",
+      "failed",
+    ]) {
+      const target = document.querySelector('[data-stat="' + key + '"]');
+      if (target) target.textContent = String(payload.batch[key] || 0);
     }
+    imageList.refresh();
+    failureCount.textContent = String(payload.upload_failure_count || 0);
+    failurePanel.hidden = !payload.upload_failure_count;
+    if (
+      payload.upload_failure_revision !== failureRevision ||
+      failurePageDirty
+    ) {
+      await loadFailurePage(failurePage, payload.upload_failure_revision);
+    }
+  }
+
+  const refreshStatus = stateApi.createCoalescedRefresh(readAndApplyStatus);
+
+  function pollStatus({ force = false } = {}) {
+    if (!force && document.hidden) return Promise.resolve(false);
+    return refreshStatus({ force })
+      .then(() => true)
+      .catch(() => false); // Polling is advisory; later polls can recover.
   }
 
   input.addEventListener("change", () =>

@@ -183,8 +183,9 @@ def serve_validation(root: Path, port: int) -> None:
     serve(app, host="127.0.0.1", port=port, threads=8)
 
 
-def fetch_json(url: str) -> tuple[dict, float, int]:
+def fetch_json(url: str) -> tuple[dict, float, int, str | None]:
     started = time.perf_counter()
+    error = None
     try:
         with urllib.request.urlopen(url, timeout=5) as response:
             payload = json.loads(response.read().decode("utf-8"))
@@ -192,8 +193,19 @@ def fetch_json(url: str) -> tuple[dict, float, int]:
     except urllib.error.HTTPError as exc:
         payload = {}
         status = exc.code
+        error = f"{type(exc).__name__}: {exc}"
+    except (
+        urllib.error.URLError,
+        TimeoutError,
+        OSError,
+        json.JSONDecodeError,
+        UnicodeDecodeError,
+    ) as exc:
+        payload = {}
+        status = 0
+        error = f"{type(exc).__name__}: {exc}"
     elapsed_ms = (time.perf_counter() - started) * 1000
-    return payload, elapsed_ms, status
+    return payload, elapsed_ms, status, error
 
 
 def percentile(values: list[float], fraction: float) -> float | None:
@@ -214,16 +226,20 @@ def monitor(
     started = time.time()
     while not stop_file.exists():
         sample_started = time.time()
-        status_payload, latency_ms, http_status = fetch_json(
+        status_payload, latency_ms, http_status, status_error = fetch_json(
             f"{base_url}/batches/{batch_id}/status"
         )
-        metrics_payload, _, metrics_status = fetch_json(f"{base_url}/validation/metrics")
+        metrics_payload, _, metrics_status, metrics_error = fetch_json(
+            f"{base_url}/validation/metrics"
+        )
         samples.append(
             {
                 "at": sample_started,
                 "latency_ms": round(latency_ms, 3),
                 "http_status": http_status,
+                "status_error": status_error,
                 "metrics_status": metrics_status,
+                "metrics_error": metrics_error,
                 "saved_total": status_payload.get("batch", {}).get("total"),
                 **metrics_payload,
             }
@@ -245,6 +261,9 @@ def monitor(
         },
         "sample_count": len(samples),
         "http_failures": sum(item["http_status"] != 200 for item in samples),
+        "metrics_http_failures": sum(
+            item["metrics_status"] != 200 for item in samples
+        ),
         "latency_p95_ms": percentile(latencies, 0.95),
         "latency_max_ms": max(latencies) if latencies else None,
         "server_sampled_working_set_max_bytes": max(
@@ -435,8 +454,8 @@ def upload_images(
     elapsed = time.perf_counter() - started
     ended_epoch = time.time()
     _, client_traced_peak = tracemalloc.get_traced_memory()
-    status_payload, _, _ = fetch_json(f"{base_url}/batches/{batch_id}/status")
-    storage_payload, _, storage_status = fetch_json(
+    status_payload, _, _, _ = fetch_json(f"{base_url}/batches/{batch_id}/status")
+    storage_payload, _, storage_status, _ = fetch_json(
         f"{base_url}/validation/storage-summary?batch_id={batch_id}"
     )
     report = {
@@ -497,7 +516,7 @@ def validate_mixed_failure(base_url: str, image_dir: Path, output: Path) -> None
         failure_ids=[str(failed["failure_id"])],
     )
     retried = send_multipart(base_url, batch_id, retry_body, retry_boundary)
-    status_payload, _, _ = fetch_json(f"{base_url}/batches/{batch_id}/status")
+    status_payload, _, _, _ = fetch_json(f"{base_url}/batches/{batch_id}/status")
     report = {
         "batch_id": batch_id,
         "simulated": "mid_request_disconnect_then_retry",

@@ -19,6 +19,9 @@
       }
       if (pending) {
         if (nextPage !== undefined || force) queued = true;
+        // A forced read confirms a state-changing action. Do not briefly
+        // render the same-page response that started before that action.
+        if (force) version += 1;
         return pending;
       }
       // Defer the first request so pending is set even for a synchronous mock.
@@ -54,6 +57,7 @@
         const timer = window.setTimeout(() => controller.abort(), 15000);
         try {
           const response = await fetch(root.dataset.imagesUrl + "?view=table&page=" + page, {
+            cache: "no-store",
             headers: { Accept: "application/json" }, signal: controller.signal,
           });
           if (!response.ok) throw new Error("图片列表暂时不可用");
