@@ -3,9 +3,148 @@
 本报告把 2026-09-06 的历史结果与 2026-09-07 审查修复后的结果分开记录。
 全部验证均使用合成图片和隔离数据库，未读取、修改、删除或重建真实业务数据。
 
-## 最新状态：图片列表刷新修复（2026-09-07）
+## 最新状态：按 3413bc6b 补修与 Windows 验收（2026-09-07）
 
-本节为最新交付；下方一、二节保留此前 Windows 验证与历史结果。
+本节是当前结果。验证代码提交为
+`0acd823e7e67684ae4fa9d50fa63aed5fd7f8629`，基线为
+`3413bc6b54bf4a6896f8420b95c2db42c4e510f9`。继续使用 PR #5 的
+`codex/issue-4-batch-upload-progress` 分支，未合并，也未进入第三阶段。
+
+### 1. 复核后发现并修复的问题
+
+1. 上传结束调用状态轮询时，如果旧轮询正在进行，旧实现会立即返回。图片列表虽有
+   强制补读，批次统计却可能暂时停留在上传前，直到下一次定时轮询。现在普通状态
+   读取合并，最终强制读取会在旧请求后串行补读一次，调用者等待补读完成。
+2. 同页图片读取在上传结束强制刷新时，上传前启动的响应仍可能短暂渲染。现在强制
+   刷新会使旧响应失效，并对图片和状态 GET 显式使用 `cache: "no-store"`。
+3. 状态与图片 loader 都曾存在 Promise 循环已退出、`pending` 尚未由外层
+   `.finally` 清空的微任务窗口；此时到达的 force 会挂到已经结束的 Promise，
+   后续读取丢失。现在 `pending` 在 runner 内同步清空，并用精确微任务顺序回归。
+4. 性能采样器原来只捕获 HTTP 状态错误。连接拒绝、超时、正文截断
+   `IncompleteRead`、非法 JSON 或合法但非对象的 JSON 可能终止整段采样。
+   现在这些情况保存为 `status=0` 的原始失败样本，状态与 metrics 失败分别计数。
+
+上述修改没有新增数据库迁移；版本 1/2/3、SHA-256 去重和第一阶段
+`attempt_count` 领取版本保护保持不变。上传、状态、图片列表和失败分页没有调用
+OCR、字段提取、车辆合并或任务领取。
+
+### 2. 当前提交的自动化与 Windows 最小启动
+
+环境：Windows 10 10.0.19045 SP0，Python 3.13.5，Node.js v24.19.0，
+Waitress 3.0.2（8 线程）。
+
+- `.venv\Scripts\python.exe -m pytest -p no:cacheprovider --basetemp
+  .pytest-tmp-0acd823-full`：**56 passed in 70.43s**。原 39 项保留；其中
+  6 项迁移测试覆盖重复执行、v1/v2→v3 和外键检查。
+- `node --test tests/js/batch_upload_state.test.js
+  tests/js/batch_images.test.js`：**16 passed**。新增覆盖最终状态补读、
+  同页旧响应失效，以及状态/图片两条 Promise settlement-gap。
+- Python `compileall`、三个前端 JavaScript 的 `node --check`、
+  `pip check`（No broken requirements found）和 `git diff --check`：通过。
+- Waitress 命令：
+
+      .venv\Scripts\python.exe scripts\phase2_validation.py serve \
+        .phase2-validation-0acd823-20260907-162512\server --port 5056
+
+  `GET /batches` 返回 HTTP 200 且包含“批次管理”。验证后只停止该命令的精确
+  PID 1536，5056 端口监听数为 0。
+
+检查与启动证据：
+[raw_checks.json](validation/issue4-final-0acd823/raw_checks.json)、
+[raw_startup.json](validation/issue4-final-0acd823/raw_startup.json)。
+
+### 3. 当前提交的 500 张 Windows / Waitress 规模验证
+
+验证命令：
+
+    .venv\Scripts\python.exe scripts\phase2_validation.py monitor \
+      http://127.0.0.1:5056 1 <fresh-stop-file> <raw_monitor.json> \
+      --commit-sha 0acd823e7e67684ae4fa9d50fa63aed5fd7f8629
+    .venv\Scripts\python.exe scripts\phase2_validation.py upload \
+      http://127.0.0.1:5056 .phase2-validation-fix\images <raw_upload.json> \
+      --group-size 25 --batch-id 1 \
+      --commit-sha 0acd823e7e67684ae4fa9d50fa63aed5fd7f8629
+
+数据和分组：
+
+- 500 张 JPEG，500 个不同 SHA-256，全部 1600×1200。
+- 单图 712,306–1,002,547 bytes，平均 876,248 bytes；总净大小
+  438,123,918 bytes（约 417.83 MiB）。
+- 20 组，每组 25 张；每组净大小 21,189,799–22,474,469 bytes，
+  multipart 请求 21,202,592–22,487,262 bytes，均低于 64 MiB。
+- 配置为单文件最多 16 MiB、每组最多 25 张/64 MiB；请求并发数 1。
+
+上传窗口为 2026-09-07T06:25:51.911Z 至 06:27:06.840Z，共
+**74.929 秒**。第 2 组模拟请求中途断开后安全重传；第 3 组完整发送后丢弃
+响应再重传。客户端可观察结果为 475 `added`、0 `reused`、
+25 `already_in_batch`、0 `failed`；第 3 组第一次响应虽被丢弃，服务端
+已确认 25 张，重传没有重复保存。
+
+最终 batch 1：
+
+- evidence 500、不同 SHA-256 500、batch_images 500、upload_receipts 500；
+- 正式哈希文件 500、未解决 upload_failures 0；
+- queued 500、OCR failed 0；第二阶段未运行 OCR，因此 queued 符合预期。
+
+性能采样窗口为 2026-09-07T06:25:49.884Z 至 06:27:08.932Z，共
+79.048 秒；比上传提前 2.027 秒开始、延后 2.092 秒结束，完整覆盖上传窗口。
+
+- 每秒采样状态接口，共 79 个样本；状态 HTTP 失败 0，metrics HTTP 失败 0。
+- 状态响应 p95 90.537 ms，最大 147.109 ms。
+- 服务端**采样工作集最大值**：52,453,376 bytes（约 50.02 MiB）。
+- 服务端**进程生命周期峰值工作集**：54,509,568 bytes（约 51.98 MiB）。
+  来源是服务端进程的 Windows `GetProcessMemoryInfo` /
+  `PROCESS_MEMORY_COUNTERS.PeakWorkingSetSize`，不是每秒工作集样本的别名。
+- Python tracemalloc 服务端峰值 4,291,093 bytes。Python 上传客户端
+  tracemalloc 峰值 66,981,056 bytes，只属于验证客户端，**不是浏览器内存**。
+
+原始证据：
+[raw_upload.json](validation/issue4-final-0acd823/raw_upload.json)、
+[raw_monitor.json](validation/issue4-final-0acd823/raw_monitor.json)。
+
+### 4. 混合失败恢复与 51 张分页
+
+- 同组上传两张有效图和一张损坏图时，两张有效图均成功关联，损坏图生成一条精确
+  失败记录；用另一张有效图明确替换后，批次总数为 3，未解决失败数为 0。
+- fresh batch 通过 25/25/1 三个串行请求上传 51 张不同合成图，最终总数 51、
+  未解决失败 0；图片接口第一页 50 条、第二页 1 条、`page_count=2`，
+  `view=table` 第二页包含预期文件名。
+- 该 51 张操作由 Python HTTP 客户端及直接 API 读取完成，只证明服务端分组、
+  幂等和分页终态，**不视为真实浏览器自动刷新或 File 对象保留证据**。
+
+证据：
+[raw_mixed.json](validation/issue4-final-0acd823/raw_mixed.json)、
+[raw_upload_51.json](validation/issue4-final-0acd823/raw_upload_51.json)、
+[raw_ui_51_api.json](validation/issue4-final-0acd823/raw_ui_51_api.json)。
+
+### 5. 真实浏览器验收仍未完成
+
+按 `browser:control-in-app-browser` 技能连接最终 SHA 的本地隔离页面时，受支持
+运行时在加载浏览器文档和打开页面之前退出：
+`trusted Node process exited unexpectedly; kernel reset`。同一宿主的前一次
+诊断为 `windows sandbox failed: helper_unknown_error: setup refresh had errors`。
+因此没有应用内交互、截图或浏览器内存数据；未使用 standalone Playwright 或其他
+通道绕过限制。证据：
+[raw_browser_attempt.json](validation/issue4-final-0acd823/raw_browser_attempt.json)。
+
+故仍不能宣称第二阶段全部通过。以下项目仍需在可访问本地服务的受支持浏览器完成：
+
+1. 实际选择 51/500 张文件并观察 25 张/64 MiB 分组、串行请求、100% 后
+   “服务器确认中”、最多 2 次自动重试和失败组不阻断后续组。
+2. 上传结束无整页刷新地更新统计与 50+1 图片分页；第二页补传、上传中切页和
+   延迟旧响应不能覆盖新页，并验证预选 native `FileList` 保留。
+3. 列表失败后的旧数据保留/按钮恢复、仅手动重试失败或未确认文件、失败分页与
+   替换文件重试、断网 outbox/刷新提示、响应丢失后的页面安全重传。
+4. 保存真实操作截图及可准确归因的浏览器内存；Python 客户端内存不得替代。
+
+全部运行数据位于新的 `.phase2-validation-0acd823-20260907-162512` 隔离根；
+源合成图只读复用。未读取、修改、删除或重建 `data/vehicles.db`、业务上传、
+备份或导出文件。
+
+## 上一轮：图片列表刷新修复（2026-09-07）
+
+本节保留 3413bc6b 时记录的上一轮结果；其浏览器限制和未完成项已由上方当前
+Windows 结果重新核对。下方一、二节继续保留更早的 Windows 验证与历史结果。
 
 - 验证代码提交：`26f232093d7e4e90b62f2b6cff1441f9cb725e98`。
 - 基线：`1613ec18dca0fee88a51af53ef17919597cfe747`；继续原 PR #5 分支，未合并。

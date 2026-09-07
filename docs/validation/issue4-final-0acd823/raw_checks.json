@@ -1,0 +1,30 @@
+{
+  "validation_commit_sha": "0acd823e7e67684ae4fa9d50fa63aed5fd7f8629",
+  "environment": {
+    "platform": "Windows 10 10.0.19045 SP0",
+    "python": "3.13.5",
+    "node": "v24.19.0",
+    "waitress": "3.0.2"
+  },
+  "pytest": {
+    "command": ".venv\\Scripts\\python.exe -m pytest -p no:cacheprovider --basetemp .pytest-tmp-0acd823-full",
+    "collected": 56,
+    "passed": 56,
+    "failed": 0,
+    "elapsed_seconds": 70.43,
+    "migration_tests_included": 6
+  },
+  "javascript": {
+    "command": "node --test tests/js/batch_upload_state.test.js tests/js/batch_images.test.js",
+    "passed": 16,
+    "failed": 0
+  },
+  "checks": {
+    "python_compileall": "passed",
+    "batch_upload_js_syntax": "passed",
+    "batch_upload_state_js_syntax": "passed",
+    "batch_images_js_syntax": "passed",
+    "pip_check": "No broken requirements found.",
+    "git_diff_check": "passed"
+  }
+}

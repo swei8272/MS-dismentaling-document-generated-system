@@ -1,0 +1,271 @@
+{
+  "validation_commit_sha": "0acd823e7e67684ae4fa9d50fa63aed5fd7f8629",
+  "environment": {
+    "platform": "Windows-10-10.0.19045-SP0",
+    "python": "3.13.5 | packaged by Anaconda, Inc. | (main, Jun 12 2025, 16:37:03) [MSC v.1929 64 bit (AMD64)]",
+    "server": "Waitress",
+    "uploader": "Python HTTP validation client (not browser memory)"
+  },
+  "batch_id": 1,
+  "upload_window": {
+    "started_at_utc": "2026-09-07T06:25:51.911+00:00",
+    "ended_at_utc": "2026-09-07T06:27:06.840+00:00",
+    "elapsed_seconds": 74.929
+  },
+  "image_inventory": {
+    "count": 500,
+    "unique_sha256": 500,
+    "dimensions": [
+      [
+        1600,
+        1200
+      ]
+    ],
+    "minimum_bytes": 712306,
+    "maximum_bytes": 1002547,
+    "average_bytes": 876248,
+    "total_bytes": 438123918
+  },
+  "grouping": {
+    "group_max_files": 25,
+    "group_max_bytes": 67108864,
+    "file_max_bytes": 16777216,
+    "group_count": 20,
+    "concurrent_requests": 1
+  },
+  "observed_result_counts": {
+    "added": 475,
+    "reused": 0,
+    "already_in_batch": 25,
+    "failed": 0
+  },
+  "server_batch": {
+    "batch_no": "20260907-001",
+    "completed": 0,
+    "completed_at": null,
+    "created_at": "2026-09-07T06:25:49+00:00",
+    "failed": 0,
+    "id": 1,
+    "name": "第二阶段 500 张合成图片验证",
+    "pending": 0,
+    "processing": 0,
+    "queued": 500,
+    "status": "queued",
+    "total": 500,
+    "updated_at": "2026-09-07T06:27:06+00:00"
+  },
+  "upload_failure_count": 0,
+  "storage_summary_http_status": 200,
+  "storage_summary": {
+    "batch_image_count": 500,
+    "disk_file_count": 500,
+    "evidence_count": 500,
+    "unique_sha256_count": 500,
+    "unresolved_failure_count": 0,
+    "upload_receipt_count": 500
+  },
+  "python_uploader_traced_peak_bytes": 66981056,
+  "browser_memory": null,
+  "group_results": [
+    {
+      "group": 1,
+      "files": 25,
+      "payload_bytes": 21202592,
+      "elapsed_seconds": 2.993,
+      "simulated": null,
+      "statuses": {
+        "added": 25
+      }
+    },
+    {
+      "group": 2,
+      "files": 25,
+      "payload_bytes": 21767608,
+      "elapsed_seconds": 3.177,
+      "simulated": "mid_request_disconnect_then_retry",
+      "statuses": {
+        "added": 25
+      }
+    },
+    {
+      "group": 3,
+      "files": 25,
+      "payload_bytes": 22340479,
+      "elapsed_seconds": 1.561,
+      "simulated": "response_lost_then_retry",
+      "statuses": {
+        "already_in_batch": 25
+      }
+    },
+    {
+      "group": 4,
+      "files": 25,
+      "payload_bytes": 21828447,
+      "elapsed_seconds": 3.948,
+      "simulated": null,
+      "statuses": {
+        "added": 25
+      }
+    },
+    {
+      "group": 5,
+      "files": 25,
+      "payload_bytes": 21808822,
+      "elapsed_seconds": 3.883,
+      "simulated": null,
+      "statuses": {
+        "added": 25
+      }
+    },
+    {
+      "group": 6,
+      "files": 25,
+      "payload_bytes": 22487262,
+      "elapsed_seconds": 3.594,
+      "simulated": null,
+      "statuses": {
+        "added": 25
+      }
+    },
+    {
+      "group": 7,
+      "files": 25,
+      "payload_bytes": 21797640,
+      "elapsed_seconds": 4.136,
+      "simulated": null,
+      "statuses": {
+        "added": 25
+      }
+    },
+    {
+      "group": 8,
+      "files": 25,
+      "payload_bytes": 21593527,
+      "elapsed_seconds": 4.14,
+      "simulated": null,
+      "statuses": {
+        "added": 25
+      }
+    },
+    {
+      "group": 9,
+      "files": 25,
+      "payload_bytes": 22016153,
+      "elapsed_seconds": 3.904,
+      "simulated": null,
+      "statuses": {
+        "added": 25
+      }
+    },
+    {
+      "group": 10,
+      "files": 25,
+      "payload_bytes": 22169168,
+      "elapsed_seconds": 3.93,
+      "simulated": null,
+      "statuses": {
+        "added": 25
+      }
+    },
+    {
+      "group": 11,
+      "files": 25,
+      "payload_bytes": 21829280,
+      "elapsed_seconds": 3.548,
+      "simulated": null,
+      "statuses": {
+        "added": 25
+      }
+    },
+    {
+      "group": 12,
+      "files": 25,
+      "payload_bytes": 22202903,
+      "elapsed_seconds": 3.768,
+      "simulated": null,
+      "statuses": {
+        "added": 25
+      }
+    },
+    {
+      "group": 13,
+      "files": 25,
+      "payload_bytes": 22083471,
+      "elapsed_seconds": 3.143,
+      "simulated": null,
+      "statuses": {
+        "added": 25
+      }
+    },
+    {
+      "group": 14,
+      "files": 25,
+      "payload_bytes": 21485267,
+      "elapsed_seconds": 3.208,
+      "simulated": null,
+      "statuses": {
+        "added": 25
+      }
+    },
+    {
+      "group": 15,
+      "files": 25,
+      "payload_bytes": 21950752,
+      "elapsed_seconds": 3.073,
+      "simulated": null,
+      "statuses": {
+        "added": 25
+      }
+    },
+    {
+      "group": 16,
+      "files": 25,
+      "payload_bytes": 22341229,
+      "elapsed_seconds": 3.62,
+      "simulated": null,
+      "statuses": {
+        "added": 25
+      }
+    },
+    {
+      "group": 17,
+      "files": 25,
+      "payload_bytes": 21661031,
+      "elapsed_seconds": 3.854,
+      "simulated": null,
+      "statuses": {
+        "added": 25
+      }
+    },
+    {
+      "group": 18,
+      "files": 25,
+      "payload_bytes": 22207681,
+      "elapsed_seconds": 3.978,
+      "simulated": null,
+      "statuses": {
+        "added": 25
+      }
+    },
+    {
+      "group": 19,
+      "files": 25,
+      "payload_bytes": 22075761,
+      "elapsed_seconds": 3.962,
+      "simulated": null,
+      "statuses": {
+        "added": 25
+      }
+    },
+    {
+      "group": 20,
+      "files": 25,
+      "payload_bytes": 21530706,
+      "elapsed_seconds": 4.05,
+      "simulated": null,
+      "statuses": {
+        "added": 25
+      }
+    }
+  ]
+}

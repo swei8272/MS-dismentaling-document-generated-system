@@ -1,0 +1,15 @@
+{
+  "validation_commit_sha": "0acd823e7e67684ae4fa9d50fa63aed5fd7f8629",
+  "skill": "browser:control-in-app-browser",
+  "target_url": "http://127.0.0.1:5056/batches",
+  "runtime_setup_started": true,
+  "browser_documentation_loaded": false,
+  "application_page_opened": false,
+  "application_interaction_performed": false,
+  "screenshots": [],
+  "browser_memory": null,
+  "error": "trusted Node process exited unexpectedly; kernel reset",
+  "preceding_same-host_diagnostic": "node_repl kernel exited unexpectedly; windows sandbox failed: helper_unknown_error: setup refresh had errors",
+  "fallback_browser_automation_used": false,
+  "browser_acceptance_complete": false
+}
