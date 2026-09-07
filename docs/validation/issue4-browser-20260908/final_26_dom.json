@@ -1,0 +1,7 @@
+{
+  "utc": "2026-09-07T23:25:58.815Z",
+  "stats": "26\n服务端已保存\n26\nOCR 排队\n0\nOCR 处理中\n0\nOCR 已完成\n0\n待确认\n0\nOCR 失败",
+  "failuresPanel": "\n  上传失败记录 0\n  这些记录属于文件传输或格式校验，不会创建 evidence，也不计入 OCR 失败。请在对应记录上明确选择替换文件；系统不会根据文件名或大小自动认定关联。\n  \n  \n",
+  "failureRows": 0,
+  "imageRows": 26
+}

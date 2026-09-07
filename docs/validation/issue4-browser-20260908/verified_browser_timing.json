@@ -1,0 +1,73 @@
+{
+  "validation_commit_sha": "7b71407bed03eda7a65e4e7803267fba956cd213",
+  "click_requested_utc": "2026-09-07T23:30:25.886Z",
+  "observations": [
+    {
+      "utc": "2026-09-07T23:30:28.831Z",
+      "confirmed": 0,
+      "badge": "已创建"
+    },
+    {
+      "utc": "2026-09-07T23:30:29.857Z",
+      "confirmed": 25,
+      "badge": "排队中"
+    },
+    {
+      "utc": "2026-09-07T23:30:30.882Z",
+      "confirmed": 75,
+      "badge": "排队中"
+    },
+    {
+      "utc": "2026-09-07T23:30:31.898Z",
+      "confirmed": 125,
+      "badge": "排队中"
+    },
+    {
+      "utc": "2026-09-07T23:30:32.922Z",
+      "confirmed": 175,
+      "badge": "排队中"
+    },
+    {
+      "utc": "2026-09-07T23:30:33.949Z",
+      "confirmed": 200,
+      "badge": "排队中"
+    },
+    {
+      "utc": "2026-09-07T23:30:34.965Z",
+      "confirmed": 250,
+      "badge": "排队中"
+    },
+    {
+      "utc": "2026-09-07T23:30:35.987Z",
+      "confirmed": 300,
+      "badge": "排队中"
+    },
+    {
+      "utc": "2026-09-07T23:30:37.007Z",
+      "confirmed": 325,
+      "badge": "排队中"
+    },
+    {
+      "utc": "2026-09-07T23:30:38.019Z",
+      "confirmed": 375,
+      "badge": "排队中"
+    },
+    {
+      "utc": "2026-09-07T23:30:39.032Z",
+      "confirmed": 425,
+      "badge": "排队中"
+    },
+    {
+      "utc": "2026-09-07T23:30:40.056Z",
+      "confirmed": 475,
+      "badge": "排队中"
+    },
+    {
+      "utc": "2026-09-07T23:30:41.073Z",
+      "confirmed": 500,
+      "badge": "排队中"
+    }
+  ],
+  "click_returned_utc": "2026-09-07T23:30:28.823Z",
+  "confirmed_500_observed_utc": "2026-09-07T23:30:41.076Z"
+}

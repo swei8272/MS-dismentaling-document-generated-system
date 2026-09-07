@@ -1,0 +1,349 @@
+{
+  "method": "Windows Get-Process chrome WorkingSet64 and PrivateMemorySize64, summed across all Chrome processes each second",
+  "scope": "All Chrome processes, including pre-existing unrelated tabs and extension processes; not isolated tab memory",
+  "metric": "sampled maximum, not process lifetime peak",
+  "samples": [
+    {
+      "utc": "2026-09-07T23:30:05.4410947Z",
+      "process_count": 30,
+      "total_working_set_bytes": 4088967168,
+      "total_private_bytes": 4218023936
+    },
+    {
+      "utc": "2026-09-07T23:30:06.4864732Z",
+      "process_count": 30,
+      "total_working_set_bytes": 4089139200,
+      "total_private_bytes": 4218384384
+    },
+    {
+      "utc": "2026-09-07T23:30:07.5020482Z",
+      "process_count": 30,
+      "total_working_set_bytes": 4087939072,
+      "total_private_bytes": 4217454592
+    },
+    {
+      "utc": "2026-09-07T23:30:08.5169326Z",
+      "process_count": 30,
+      "total_working_set_bytes": 4088131584,
+      "total_private_bytes": 4217843712
+    },
+    {
+      "utc": "2026-09-07T23:30:09.5232170Z",
+      "process_count": 30,
+      "total_working_set_bytes": 4088860672,
+      "total_private_bytes": 4218654720
+    },
+    {
+      "utc": "2026-09-07T23:30:10.5374891Z",
+      "process_count": 30,
+      "total_working_set_bytes": 4089212928,
+      "total_private_bytes": 4219277312
+    },
+    {
+      "utc": "2026-09-07T23:30:11.5448607Z",
+      "process_count": 30,
+      "total_working_set_bytes": 4088971264,
+      "total_private_bytes": 4218515456
+    },
+    {
+      "utc": "2026-09-07T23:30:12.5596300Z",
+      "process_count": 30,
+      "total_working_set_bytes": 4089098240,
+      "total_private_bytes": 4218544128
+    },
+    {
+      "utc": "2026-09-07T23:30:13.5655442Z",
+      "process_count": 30,
+      "total_working_set_bytes": 4089827328,
+      "total_private_bytes": 4219482112
+    },
+    {
+      "utc": "2026-09-07T23:30:14.5852509Z",
+      "process_count": 30,
+      "total_working_set_bytes": 4089147392,
+      "total_private_bytes": 4218437632
+    },
+    {
+      "utc": "2026-09-07T23:30:15.5990442Z",
+      "process_count": 30,
+      "total_working_set_bytes": 4088610816,
+      "total_private_bytes": 4217556992
+    },
+    {
+      "utc": "2026-09-07T23:30:16.6266012Z",
+      "process_count": 30,
+      "total_working_set_bytes": 4088410112,
+      "total_private_bytes": 4216930304
+    },
+    {
+      "utc": "2026-09-07T23:30:17.6402961Z",
+      "process_count": 30,
+      "total_working_set_bytes": 4089122816,
+      "total_private_bytes": 4217335808
+    },
+    {
+      "utc": "2026-09-07T23:30:18.6620935Z",
+      "process_count": 30,
+      "total_working_set_bytes": 4089208832,
+      "total_private_bytes": 4216877056
+    },
+    {
+      "utc": "2026-09-07T23:30:19.6800967Z",
+      "process_count": 30,
+      "total_working_set_bytes": 4088823808,
+      "total_private_bytes": 4216270848
+    },
+    {
+      "utc": "2026-09-07T23:30:20.6981272Z",
+      "process_count": 30,
+      "total_working_set_bytes": 4089249792,
+      "total_private_bytes": 4216725504
+    },
+    {
+      "utc": "2026-09-07T23:30:21.7153051Z",
+      "process_count": 30,
+      "total_working_set_bytes": 4088631296,
+      "total_private_bytes": 4216057856
+    },
+    {
+      "utc": "2026-09-07T23:30:22.7238666Z",
+      "process_count": 30,
+      "total_working_set_bytes": 4088373248,
+      "total_private_bytes": 4215918592
+    },
+    {
+      "utc": "2026-09-07T23:30:23.7310777Z",
+      "process_count": 30,
+      "total_working_set_bytes": 4088426496,
+      "total_private_bytes": 4216258560
+    },
+    {
+      "utc": "2026-09-07T23:30:24.7463535Z",
+      "process_count": 30,
+      "total_working_set_bytes": 4088614912,
+      "total_private_bytes": 4216524800
+    },
+    {
+      "utc": "2026-09-07T23:30:25.7653473Z",
+      "process_count": 30,
+      "total_working_set_bytes": 4088778752,
+      "total_private_bytes": 4216807424
+    },
+    {
+      "utc": "2026-09-07T23:30:26.7776740Z",
+      "process_count": 30,
+      "total_working_set_bytes": 4089360384,
+      "total_private_bytes": 4217352192
+    },
+    {
+      "utc": "2026-09-07T23:30:27.7883663Z",
+      "process_count": 30,
+      "total_working_set_bytes": 4090802176,
+      "total_private_bytes": 4218494976
+    },
+    {
+      "utc": "2026-09-07T23:30:28.8058732Z",
+      "process_count": 30,
+      "total_working_set_bytes": 4091072512,
+      "total_private_bytes": 4218916864
+    },
+    {
+      "utc": "2026-09-07T23:30:29.8098346Z",
+      "process_count": 31,
+      "total_working_set_bytes": 4164124672,
+      "total_private_bytes": 4261838848
+    },
+    {
+      "utc": "2026-09-07T23:30:30.8194990Z",
+      "process_count": 31,
+      "total_working_set_bytes": 4168585216,
+      "total_private_bytes": 4283506688
+    },
+    {
+      "utc": "2026-09-07T23:30:31.8303190Z",
+      "process_count": 31,
+      "total_working_set_bytes": 4169109504,
+      "total_private_bytes": 4284608512
+    },
+    {
+      "utc": "2026-09-07T23:30:32.8420125Z",
+      "process_count": 31,
+      "total_working_set_bytes": 4172345344,
+      "total_private_bytes": 4287492096
+    },
+    {
+      "utc": "2026-09-07T23:30:33.8544637Z",
+      "process_count": 31,
+      "total_working_set_bytes": 4172304384,
+      "total_private_bytes": 4287205376
+    },
+    {
+      "utc": "2026-09-07T23:30:34.8697797Z",
+      "process_count": 31,
+      "total_working_set_bytes": 4172787712,
+      "total_private_bytes": 4288307200
+    },
+    {
+      "utc": "2026-09-07T23:30:35.8878808Z",
+      "process_count": 31,
+      "total_working_set_bytes": 4172120064,
+      "total_private_bytes": 4285931520
+    },
+    {
+      "utc": "2026-09-07T23:30:36.8968045Z",
+      "process_count": 31,
+      "total_working_set_bytes": 4172161024,
+      "total_private_bytes": 4286197760
+    },
+    {
+      "utc": "2026-09-07T23:30:37.9081638Z",
+      "process_count": 31,
+      "total_working_set_bytes": 4173008896,
+      "total_private_bytes": 4287459328
+    },
+    {
+      "utc": "2026-09-07T23:30:38.9208789Z",
+      "process_count": 31,
+      "total_working_set_bytes": 4170944512,
+      "total_private_bytes": 4285333504
+    },
+    {
+      "utc": "2026-09-07T23:30:39.9247571Z",
+      "process_count": 31,
+      "total_working_set_bytes": 4169695232,
+      "total_private_bytes": 4285071360
+    },
+    {
+      "utc": "2026-09-07T23:30:40.9384100Z",
+      "process_count": 31,
+      "total_working_set_bytes": 4171005952,
+      "total_private_bytes": 4286750720
+    },
+    {
+      "utc": "2026-09-07T23:30:41.9578355Z",
+      "process_count": 31,
+      "total_working_set_bytes": 4171300864,
+      "total_private_bytes": 4287418368
+    },
+    {
+      "utc": "2026-09-07T23:30:42.9711332Z",
+      "process_count": 31,
+      "total_working_set_bytes": 4112044032,
+      "total_private_bytes": 4216668160
+    },
+    {
+      "utc": "2026-09-07T23:30:43.9797821Z",
+      "process_count": 31,
+      "total_working_set_bytes": 4103360512,
+      "total_private_bytes": 4206915584
+    },
+    {
+      "utc": "2026-09-07T23:30:44.9896705Z",
+      "process_count": 31,
+      "total_working_set_bytes": 4103528448,
+      "total_private_bytes": 4207112192
+    },
+    {
+      "utc": "2026-09-07T23:30:46.0061472Z",
+      "process_count": 31,
+      "total_working_set_bytes": 4103032832,
+      "total_private_bytes": 4171337728
+    },
+    {
+      "utc": "2026-09-07T23:30:47.0235394Z",
+      "process_count": 31,
+      "total_working_set_bytes": 4100333568,
+      "total_private_bytes": 4156891136
+    },
+    {
+      "utc": "2026-09-07T23:30:48.0362513Z",
+      "process_count": 31,
+      "total_working_set_bytes": 4100644864,
+      "total_private_bytes": 4157243392
+    },
+    {
+      "utc": "2026-09-07T23:30:49.0424006Z",
+      "process_count": 31,
+      "total_working_set_bytes": 4101419008,
+      "total_private_bytes": 4130623488
+    },
+    {
+      "utc": "2026-09-07T23:30:50.0570902Z",
+      "process_count": 31,
+      "total_working_set_bytes": 4101423104,
+      "total_private_bytes": 4130385920
+    },
+    {
+      "utc": "2026-09-07T23:30:51.0768612Z",
+      "process_count": 31,
+      "total_working_set_bytes": 4113788928,
+      "total_private_bytes": 4181688320
+    },
+    {
+      "utc": "2026-09-07T23:30:52.0918488Z",
+      "process_count": 31,
+      "total_working_set_bytes": 4132327424,
+      "total_private_bytes": 4200431616
+    },
+    {
+      "utc": "2026-09-07T23:30:53.0974144Z",
+      "process_count": 31,
+      "total_working_set_bytes": 4132548608,
+      "total_private_bytes": 4200669184
+    },
+    {
+      "utc": "2026-09-07T23:30:54.1091030Z",
+      "process_count": 31,
+      "total_working_set_bytes": 4132569088,
+      "total_private_bytes": 4200689664
+    },
+    {
+      "utc": "2026-09-07T23:30:55.1236525Z",
+      "process_count": 31,
+      "total_working_set_bytes": 4126892032,
+      "total_private_bytes": 4194631680
+    },
+    {
+      "utc": "2026-09-07T23:30:56.1363629Z",
+      "process_count": 31,
+      "total_working_set_bytes": 4126650368,
+      "total_private_bytes": 4194459648
+    },
+    {
+      "utc": "2026-09-07T23:30:57.1497935Z",
+      "process_count": 31,
+      "total_working_set_bytes": 4126330880,
+      "total_private_bytes": 4194066432
+    },
+    {
+      "utc": "2026-09-07T23:30:58.1594213Z",
+      "process_count": 31,
+      "total_working_set_bytes": 4126412800,
+      "total_private_bytes": 4163887104
+    },
+    {
+      "utc": "2026-09-07T23:30:59.1806560Z",
+      "process_count": 30,
+      "total_working_set_bytes": 4032868352,
+      "total_private_bytes": 4091596800
+    },
+    {
+      "utc": "2026-09-07T23:31:00.1990761Z",
+      "process_count": 30,
+      "total_working_set_bytes": 4033040384,
+      "total_private_bytes": 4091678720
+    },
+    {
+      "utc": "2026-09-07T23:31:01.2056522Z",
+      "process_count": 30,
+      "total_working_set_bytes": 4033368064,
+      "total_private_bytes": 4092121088
+    },
+    {
+      "utc": "2026-09-07T23:31:02.2249537Z",
+      "process_count": 30,
+      "total_working_set_bytes": 4033339392,
+      "total_private_bytes": 4092055552
+    }
+  ]
+}

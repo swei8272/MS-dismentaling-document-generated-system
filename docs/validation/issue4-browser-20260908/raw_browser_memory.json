@@ -1,0 +1,499 @@
+{
+  "method": "Windows Get-Process chrome WorkingSet64 and PrivateMemorySize64, summed across all Chrome processes each second",
+  "scope": "All Chrome processes, including pre-existing unrelated tabs and extension processes; not isolated tab memory",
+  "metric": "sampled maximum, not process lifetime peak",
+  "samples": [
+    {
+      "utc": "2026-09-07T22:56:24.7987784Z",
+      "process_count": 29,
+      "total_working_set_bytes": 4030476288,
+      "total_private_bytes": 4645203968
+    },
+    {
+      "utc": "2026-09-07T22:56:25.8514037Z",
+      "process_count": 29,
+      "total_working_set_bytes": 4030459904,
+      "total_private_bytes": 4645531648
+    },
+    {
+      "utc": "2026-09-07T22:56:26.8724083Z",
+      "process_count": 29,
+      "total_working_set_bytes": 4008321024,
+      "total_private_bytes": 4360257536
+    },
+    {
+      "utc": "2026-09-07T22:56:27.8883562Z",
+      "process_count": 29,
+      "total_working_set_bytes": 4004302848,
+      "total_private_bytes": 4355612672
+    },
+    {
+      "utc": "2026-09-07T22:56:28.9049764Z",
+      "process_count": 29,
+      "total_working_set_bytes": 4010504192,
+      "total_private_bytes": 4362862592
+    },
+    {
+      "utc": "2026-09-07T22:56:29.9167947Z",
+      "process_count": 29,
+      "total_working_set_bytes": 4004159488,
+      "total_private_bytes": 4259287040
+    },
+    {
+      "utc": "2026-09-07T22:56:30.9249708Z",
+      "process_count": 29,
+      "total_working_set_bytes": 4004810752,
+      "total_private_bytes": 4259901440
+    },
+    {
+      "utc": "2026-09-07T22:56:31.9440358Z",
+      "process_count": 29,
+      "total_working_set_bytes": 4003971072,
+      "total_private_bytes": 4205371392
+    },
+    {
+      "utc": "2026-09-07T22:56:32.9504920Z",
+      "process_count": 29,
+      "total_working_set_bytes": 4006531072,
+      "total_private_bytes": 4154732544
+    },
+    {
+      "utc": "2026-09-07T22:56:33.9588797Z",
+      "process_count": 29,
+      "total_working_set_bytes": 4007165952,
+      "total_private_bytes": 4155056128
+    },
+    {
+      "utc": "2026-09-07T22:56:34.9698258Z",
+      "process_count": 29,
+      "total_working_set_bytes": 4005404672,
+      "total_private_bytes": 4153245696
+    },
+    {
+      "utc": "2026-09-07T22:56:35.9896186Z",
+      "process_count": 29,
+      "total_working_set_bytes": 3991670784,
+      "total_private_bytes": 4208181248
+    },
+    {
+      "utc": "2026-09-07T22:56:37.0032777Z",
+      "process_count": 29,
+      "total_working_set_bytes": 3990421504,
+      "total_private_bytes": 4205539328
+    },
+    {
+      "utc": "2026-09-07T22:56:38.0237119Z",
+      "process_count": 29,
+      "total_working_set_bytes": 3992608768,
+      "total_private_bytes": 4199145472
+    },
+    {
+      "utc": "2026-09-07T22:56:39.0361478Z",
+      "process_count": 29,
+      "total_working_set_bytes": 3995348992,
+      "total_private_bytes": 4214190080
+    },
+    {
+      "utc": "2026-09-07T22:56:40.0594990Z",
+      "process_count": 29,
+      "total_working_set_bytes": 3994882048,
+      "total_private_bytes": 4212768768
+    },
+    {
+      "utc": "2026-09-07T22:56:41.0755804Z",
+      "process_count": 29,
+      "total_working_set_bytes": 3994230784,
+      "total_private_bytes": 4122468352
+    },
+    {
+      "utc": "2026-09-07T22:56:42.0837486Z",
+      "process_count": 29,
+      "total_working_set_bytes": 3994468352,
+      "total_private_bytes": 4122554368
+    },
+    {
+      "utc": "2026-09-07T22:56:43.0962519Z",
+      "process_count": 29,
+      "total_working_set_bytes": 3993092096,
+      "total_private_bytes": 4121395200
+    },
+    {
+      "utc": "2026-09-07T22:56:44.1057236Z",
+      "process_count": 29,
+      "total_working_set_bytes": 3991592960,
+      "total_private_bytes": 4100837376
+    },
+    {
+      "utc": "2026-09-07T22:56:45.1093225Z",
+      "process_count": 29,
+      "total_working_set_bytes": 3990339584,
+      "total_private_bytes": 4062130176
+    },
+    {
+      "utc": "2026-09-07T22:56:46.1234332Z",
+      "process_count": 29,
+      "total_working_set_bytes": 3991158784,
+      "total_private_bytes": 4062912512
+    },
+    {
+      "utc": "2026-09-07T22:56:47.1332606Z",
+      "process_count": 29,
+      "total_working_set_bytes": 3990712320,
+      "total_private_bytes": 4062887936
+    },
+    {
+      "utc": "2026-09-07T22:56:48.1416022Z",
+      "process_count": 28,
+      "total_working_set_bytes": 3918290944,
+      "total_private_bytes": 4011532288
+    },
+    {
+      "utc": "2026-09-07T22:56:49.1459353Z",
+      "process_count": 28,
+      "total_working_set_bytes": 3917586432,
+      "total_private_bytes": 4004139008
+    },
+    {
+      "utc": "2026-09-07T22:56:50.1546864Z",
+      "process_count": 28,
+      "total_working_set_bytes": 3904323584,
+      "total_private_bytes": 4005015552
+    },
+    {
+      "utc": "2026-09-07T22:56:51.1663668Z",
+      "process_count": 28,
+      "total_working_set_bytes": 3902533632,
+      "total_private_bytes": 4001525760
+    },
+    {
+      "utc": "2026-09-07T22:56:52.1713110Z",
+      "process_count": 28,
+      "total_working_set_bytes": 3902869504,
+      "total_private_bytes": 4001619968
+    },
+    {
+      "utc": "2026-09-07T22:56:53.1838132Z",
+      "process_count": 28,
+      "total_working_set_bytes": 3902025728,
+      "total_private_bytes": 4325666816
+    },
+    {
+      "utc": "2026-09-07T22:56:54.1935802Z",
+      "process_count": 28,
+      "total_working_set_bytes": 3911860224,
+      "total_private_bytes": 4339412992
+    },
+    {
+      "utc": "2026-09-07T22:56:55.1983903Z",
+      "process_count": 29,
+      "total_working_set_bytes": 4031045632,
+      "total_private_bytes": 4451373056
+    },
+    {
+      "utc": "2026-09-07T22:56:56.2161869Z",
+      "process_count": 29,
+      "total_working_set_bytes": 4040069120,
+      "total_private_bytes": 4460638208
+    },
+    {
+      "utc": "2026-09-07T22:56:57.2303607Z",
+      "process_count": 29,
+      "total_working_set_bytes": 4040691712,
+      "total_private_bytes": 4453523456
+    },
+    {
+      "utc": "2026-09-07T22:56:58.2442260Z",
+      "process_count": 29,
+      "total_working_set_bytes": 4043116544,
+      "total_private_bytes": 4354580480
+    },
+    {
+      "utc": "2026-09-07T22:56:59.2543885Z",
+      "process_count": 29,
+      "total_working_set_bytes": 4032954368,
+      "total_private_bytes": 4343619584
+    },
+    {
+      "utc": "2026-09-07T22:57:00.2688120Z",
+      "process_count": 29,
+      "total_working_set_bytes": 4037689344,
+      "total_private_bytes": 4347879424
+    },
+    {
+      "utc": "2026-09-07T22:57:01.2839966Z",
+      "process_count": 29,
+      "total_working_set_bytes": 4038062080,
+      "total_private_bytes": 4348252160
+    },
+    {
+      "utc": "2026-09-07T22:57:02.2969226Z",
+      "process_count": 29,
+      "total_working_set_bytes": 4038873088,
+      "total_private_bytes": 4198158336
+    },
+    {
+      "utc": "2026-09-07T22:57:03.3126085Z",
+      "process_count": 29,
+      "total_working_set_bytes": 4036349952,
+      "total_private_bytes": 4180434944
+    },
+    {
+      "utc": "2026-09-07T22:57:04.3161395Z",
+      "process_count": 29,
+      "total_working_set_bytes": 4034441216,
+      "total_private_bytes": 4177375232
+    },
+    {
+      "utc": "2026-09-07T22:57:05.3290337Z",
+      "process_count": 29,
+      "total_working_set_bytes": 4034678784,
+      "total_private_bytes": 4178206720
+    },
+    {
+      "utc": "2026-09-07T22:57:06.3372863Z",
+      "process_count": 29,
+      "total_working_set_bytes": 4005810176,
+      "total_private_bytes": 4139823104
+    },
+    {
+      "utc": "2026-09-07T22:57:07.3450079Z",
+      "process_count": 29,
+      "total_working_set_bytes": 4005150720,
+      "total_private_bytes": 4154183680
+    },
+    {
+      "utc": "2026-09-07T22:57:08.3548949Z",
+      "process_count": 29,
+      "total_working_set_bytes": 4011233280,
+      "total_private_bytes": 4210089984
+    },
+    {
+      "utc": "2026-09-07T22:57:09.3709760Z",
+      "process_count": 29,
+      "total_working_set_bytes": 4016332800,
+      "total_private_bytes": 4215291904
+    },
+    {
+      "utc": "2026-09-07T22:57:10.3779096Z",
+      "process_count": 29,
+      "total_working_set_bytes": 4002603008,
+      "total_private_bytes": 4213997568
+    },
+    {
+      "utc": "2026-09-07T22:57:11.3935541Z",
+      "process_count": 29,
+      "total_working_set_bytes": 3999113216,
+      "total_private_bytes": 4210200576
+    },
+    {
+      "utc": "2026-09-07T22:57:12.4028094Z",
+      "process_count": 29,
+      "total_working_set_bytes": 4070252544,
+      "total_private_bytes": 4815183872
+    },
+    {
+      "utc": "2026-09-07T22:57:13.4180636Z",
+      "process_count": 29,
+      "total_working_set_bytes": 4076687360,
+      "total_private_bytes": 4813455360
+    },
+    {
+      "utc": "2026-09-07T22:57:14.4339095Z",
+      "process_count": 29,
+      "total_working_set_bytes": 4059250688,
+      "total_private_bytes": 4678717440
+    },
+    {
+      "utc": "2026-09-07T22:57:15.4478965Z",
+      "process_count": 29,
+      "total_working_set_bytes": 4055457792,
+      "total_private_bytes": 4666335232
+    },
+    {
+      "utc": "2026-09-07T22:57:16.4517849Z",
+      "process_count": 28,
+      "total_working_set_bytes": 3966218240,
+      "total_private_bytes": 4659740672
+    },
+    {
+      "utc": "2026-09-07T22:57:17.4576235Z",
+      "process_count": 28,
+      "total_working_set_bytes": 3967553536,
+      "total_private_bytes": 4678565888
+    },
+    {
+      "utc": "2026-09-07T22:57:18.4737742Z",
+      "process_count": 28,
+      "total_working_set_bytes": 3925020672,
+      "total_private_bytes": 4126765056
+    },
+    {
+      "utc": "2026-09-07T22:57:19.4893413Z",
+      "process_count": 28,
+      "total_working_set_bytes": 3925471232,
+      "total_private_bytes": 4240039936
+    },
+    {
+      "utc": "2026-09-07T22:57:20.4978849Z",
+      "process_count": 28,
+      "total_working_set_bytes": 3929206784,
+      "total_private_bytes": 4243832832
+    },
+    {
+      "utc": "2026-09-07T22:57:21.5085870Z",
+      "process_count": 28,
+      "total_working_set_bytes": 3914797056,
+      "total_private_bytes": 4059688960
+    },
+    {
+      "utc": "2026-09-07T22:57:22.5239934Z",
+      "process_count": 28,
+      "total_working_set_bytes": 3917082624,
+      "total_private_bytes": 4062175232
+    },
+    {
+      "utc": "2026-09-07T22:57:23.5308167Z",
+      "process_count": 28,
+      "total_working_set_bytes": 3918061568,
+      "total_private_bytes": 4063191040
+    },
+    {
+      "utc": "2026-09-07T22:57:24.5463732Z",
+      "process_count": 28,
+      "total_working_set_bytes": 3935334400,
+      "total_private_bytes": 4333604864
+    },
+    {
+      "utc": "2026-09-07T22:57:25.5543485Z",
+      "process_count": 27,
+      "total_working_set_bytes": 3883245568,
+      "total_private_bytes": 4349779968
+    },
+    {
+      "utc": "2026-09-07T22:57:26.5621327Z",
+      "process_count": 27,
+      "total_working_set_bytes": 3887333376,
+      "total_private_bytes": 4354088960
+    },
+    {
+      "utc": "2026-09-07T22:57:27.5717568Z",
+      "process_count": 27,
+      "total_working_set_bytes": 3896885248,
+      "total_private_bytes": 4267806720
+    },
+    {
+      "utc": "2026-09-07T22:57:28.5840410Z",
+      "process_count": 27,
+      "total_working_set_bytes": 3908042752,
+      "total_private_bytes": 4238032896
+    },
+    {
+      "utc": "2026-09-07T22:57:29.5894880Z",
+      "process_count": 27,
+      "total_working_set_bytes": 3925344256,
+      "total_private_bytes": 4258181120
+    },
+    {
+      "utc": "2026-09-07T22:57:30.6030385Z",
+      "process_count": 27,
+      "total_working_set_bytes": 3921084416,
+      "total_private_bytes": 4250529792
+    },
+    {
+      "utc": "2026-09-07T22:57:31.6072092Z",
+      "process_count": 27,
+      "total_working_set_bytes": 3921825792,
+      "total_private_bytes": 4202471424
+    },
+    {
+      "utc": "2026-09-07T22:57:32.6174252Z",
+      "process_count": 27,
+      "total_working_set_bytes": 3910553600,
+      "total_private_bytes": 4069683200
+    },
+    {
+      "utc": "2026-09-07T22:57:33.6234453Z",
+      "process_count": 27,
+      "total_working_set_bytes": 3912081408,
+      "total_private_bytes": 4051075072
+    },
+    {
+      "utc": "2026-09-07T22:57:34.6313801Z",
+      "process_count": 27,
+      "total_working_set_bytes": 3919466496,
+      "total_private_bytes": 3975966720
+    },
+    {
+      "utc": "2026-09-07T22:57:35.6348997Z",
+      "process_count": 27,
+      "total_working_set_bytes": 3930955776,
+      "total_private_bytes": 3984748544
+    },
+    {
+      "utc": "2026-09-07T22:57:36.6467665Z",
+      "process_count": 27,
+      "total_working_set_bytes": 3954110464,
+      "total_private_bytes": 4044636160
+    },
+    {
+      "utc": "2026-09-07T22:57:37.6540793Z",
+      "process_count": 27,
+      "total_working_set_bytes": 3955613696,
+      "total_private_bytes": 4043018240
+    },
+    {
+      "utc": "2026-09-07T22:57:38.6651933Z",
+      "process_count": 27,
+      "total_working_set_bytes": 3948609536,
+      "total_private_bytes": 4035559424
+    },
+    {
+      "utc": "2026-09-07T22:57:39.6753219Z",
+      "process_count": 27,
+      "total_working_set_bytes": 3949608960,
+      "total_private_bytes": 4016746496
+    },
+    {
+      "utc": "2026-09-07T22:57:40.6826840Z",
+      "process_count": 27,
+      "total_working_set_bytes": 3943489536,
+      "total_private_bytes": 4009914368
+    },
+    {
+      "utc": "2026-09-07T22:57:41.6940281Z",
+      "process_count": 27,
+      "total_working_set_bytes": 3945357312,
+      "total_private_bytes": 4011786240
+    },
+    {
+      "utc": "2026-09-07T22:57:42.7033211Z",
+      "process_count": 27,
+      "total_working_set_bytes": 3953926144,
+      "total_private_bytes": 4006592512
+    },
+    {
+      "utc": "2026-09-07T22:57:43.7176150Z",
+      "process_count": 27,
+      "total_working_set_bytes": 3966357504,
+      "total_private_bytes": 4019179520
+    },
+    {
+      "utc": "2026-09-07T22:57:44.7275919Z",
+      "process_count": 27,
+      "total_working_set_bytes": 3975303168,
+      "total_private_bytes": 3989237760
+    },
+    {
+      "utc": "2026-09-07T22:57:45.7339166Z",
+      "process_count": 28,
+      "total_working_set_bytes": 4041326592,
+      "total_private_bytes": 4042141696
+    },
+    {
+      "utc": "2026-09-07T22:57:46.7406609Z",
+      "process_count": 28,
+      "total_working_set_bytes": 4052455424,
+      "total_private_bytes": 4054589440
+    }
+  ]
+}

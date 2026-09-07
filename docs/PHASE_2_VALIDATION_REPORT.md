@@ -1,9 +1,241 @@
 # 第二阶段验证报告
 
-本报告把 2026-09-06 的历史结果与 2026-09-07 审查修复后的结果分开记录。
+本报告按时间分别保留历史结果；最新结论以紧接下方的 2026-09-08 浏览器实测为准。
 全部验证均使用合成图片和隔离数据库，未读取、修改、删除或重建真实业务数据。
 
-## Sandbox 恢复与真实浏览器续验（2026-09-07 至 09-08，当前结果）
+## 状态徽标修复与最终代码复验（2026-09-08，当前结果）
+
+**最终验证代码 SHA：`7b71407bed03eda7a65e4e7803267fba956cd213`。**
+下节保留同日修复前 `e54f7bb` 的完整浏览器故障场景及规模数据；不能把其中的
+15.211 秒或 34.676 ms 转记为本节新提交结果。
+
+截图复核发现：已保存/OCR 分类计数及图片表格会更新，但页首状态徽标仍可能显示
+“已创建”。本次已修复：服务端状态轮询同时更新徽标文本及 CSS 状态，中文名称来自
+服务端渲染的允许列表，未知状态不插入 HTML。改动仅为
+`templates/batch_detail.html`、`static/batch_upload.js`、`static/batch_upload_state.js`
+和两份回归测试；没有更改上传事务、失败关联、outbox、迁移或领取版本保护。
+
+### 最终提交的实际检查
+
+- 全部 pytest：**60 passed in 59.65s**，原有 39 项保留，含 6 项迁移测试。
+  命令：`.venv\Scripts\python.exe -m pytest -p no:cacheprovider --basetemp .pytest-tmp-browser-7b71407-final`。
+- JavaScript：**17 passed**，新增状态徽标 queued/completed 更新及未知状态拒绝；
+  Python 编译、三个 JS 语法检查、依赖检查和补丁格式检查通过。
+- 新建另一个专用标记隔离根 `server-badge-final-20260908`，仍在同一合成临时目录下，
+  Waitress 5058 / 8 线程，Chrome 与 Windows 版本同下节。
+- 真实浏览器重新选择同一套 **500 张不同 SHA-256** 的 1600×1200 JPEG，
+  单图 712,184–1,002,456 bytes、合计 438,074,092 bytes；源文件/OS 缓存未清空，
+  **数据库及上传目录全新**。20 组×25 张，净大小 21,186,704–22,471,735 bytes，
+  最大在途上传 1。默认 25 张/64 MiB、单文件 16 MiB 未改变。
+- 浏览器发出点击 23:30:25.886Z，点击调用返回 23:30:28.823Z，观察到确认 500
+  为 23:30:41.076Z，耗时 **15.190 秒**（含控制调度及约 1 秒观察误差）。
+  服务端应用处理窗口 23:30:28.911463Z–23:30:40.517436Z，**11.605973 秒**；
+  不含首个请求进入 Flask 前的完整接收时间，两种窗口不混称。
+- **500 added、0 reused、0 already_in_batch、0 failed**；最终 evidence、不同
+  SHA-256、batch_images、upload_receipts、正式磁盘图片均为 **500**；queued 500，
+  未解决失败/OCR failed/`.incoming` 文件均为 0，最大 attempt_count=0，外键检查为空。
+- 浏览器逐秒观察到顶部徽标从“已创建”变成“排队中”，最后已保存/已确认均为 500，
+  图片第一页 50 行；没有手动整页刷新。此处补上了下节发现的展示遗漏。
+
+### 最终性能与内存
+
+所有时间为 2026-09-07 UTC（本地 2026-09-08）。状态每秒采样窗口为
+23:29:49.979Z–23:31:03.023Z，共 **73.044 秒、73 样本**，比服务端上传窗口早
+38.932463 秒、晚 22.505564 秒，并完整覆盖浏览器操作窗口。
+
+| 指标 | 最终测量 |
+|---|---:|
+| 完整状态采样 p95 / 最大 | **41.605 / 53.664 ms** |
+| 完整窗口状态 HTTP / metrics 失败 | **0 / 0** |
+| 服务端上传窗口内状态样本 | 12；p95/最大 53.664 ms；HTTP 失败 0 |
+| 服务端采样工作集最大 | **49,455,104 bytes** |
+| 服务端进程生命周期峰值工作集 | **50,683,904 bytes** |
+| Chrome 全进程工作集开始 / 结束 | 4,088,967,168 / 4,033,339,392 bytes |
+| Chrome 全进程采样工作集最大 | **4,173,008,896 bytes** |
+| Chrome 全进程采样私有内存最大 | **4,288,307,200 bytes** |
+
+服务端生命周期峰值来自 `GetProcessMemoryInfo/PeakWorkingSetSize`；其余工作集
+最大值仅是采样最大值。Chrome 使用 `Get-Process chrome` 的 WorkingSet64 /
+PrivateMemorySize64 聚合，共 57 样本，23:30:05.4410947Z–23:31:02.2249537Z，
+完整覆盖上传；包含既有无关标签和扩展，**不是单标签内存或生命周期峰值**。
+此次未启用 tracemalloc，也未运行 Python 上传客户端。
+
+命令同下节，最终参数分别为 `server-badge-final-20260908`、
+`.phase2-validation-browser-monitor-7b71407.stop`、`verified_monitor.json`、
+`verified_browser_memory.json` 和 `--commit-sha 7b71407bed03eda7a65e4e7803267fba956cd213`。
+状态采样仍访问 `http://127.0.0.1:5058/batches/1/status`；上传由真实文件 chooser 和
+页面按钮完成。证据汇总脚本以 `--verified` 从只读隔离 SQLite 与原始事件复算。
+
+证据：[最终汇总](validation/issue4-browser-20260908/verified_summary.json)、
+[逐秒状态/服务端内存](validation/issue4-browser-20260908/verified_monitor.json)、
+[真实 Chrome 内存](validation/issue4-browser-20260908/verified_browser_memory.json)、
+[浏览器计时与徽标状态](validation/issue4-browser-20260908/verified_browser_timing.json)、
+[逐请求事件](validation/issue4-browser-20260908/verified_events.jsonl)、
+[最终检查](validation/issue4-browser-20260908/verified_checks.json)。
+
+![最终版本真实浏览器确认 500 张并更新状态徽标](validation/issue4-browser-20260908/30-verified-500-status-badge.png)
+
+### 结论、证据校正与边界
+
+核心真实浏览器验收和最终代码 500 张规模复验已执行通过；失败分页/替换、断线刷新、
+503 退避、混合损坏图、响应抑制重传和迟到图片响应的具体操作与结果见下节，
+它们发生在 `e54f7bb`，最后一项应用改动仅同步状态徽标。全部回归已在新 SHA 重跑。
+没有新增数据库迁移、没有读取真实业务数据、没有第三阶段实现、没有合并 PR。
+验证后已通过原执行会话停止本次两个 Waitress 服务，5057/5058 监听数为 0；
+隔离数据库和合成文件保留供核对，未清理用户文件。
+
+截图 13 在最后一条替换页面尚未完成绘制时捕获，显示旧失败行，不能当作“0 失败”
+终态截图。随后独立重开原批次，DOM 为保存 26、图片 26 行、失败 0，重新保存
+[截图 29](validation/issue4-browser-20260908/29-failures-26-final-settled.png) 和
+[final_26_dom.json](validation/issue4-browser-20260908/final_26_dom.json)，并与 SQLite
+26 resolved/0 unresolved 一致。截图 11 同样是分页中间帧，使用截图 12 替代。
+
+尚未单独验证/测量：单标签 renderer 内存，以及浏览器 TCP 层静默丢弃成功响应。
+本轮浏览器响应抑制为提交后返回合成 503，真实连接断开另外通过停止隔离 Waitress
+制造；两者不等同于 TCP 丢包。额外跨批次/同名/重复补写交错组合有回归覆盖，
+不宣称每种组合都逐一手动操作过。历史阻断和历史 Python 性能数据继续独立保留。
+
+## 真实浏览器验收及 500 张实测（2026-09-08，徽标修复前结果）
+
+此前 sandbox 与文件选择器阻断已经解除。本轮使用受支持的真实 Chrome 扩展控制、
+页面文件选择器和上传按钮完成下列操作，**不再以 API 上传或模拟 DOM 代替浏览器验收**。
+继续 PR #5 原分支；远端核对时为 `bd32c9a`，没有新增评论。本轮没有合并 PR，
+没有进入第三阶段。文档原先要求新建分支，但按用户最新指令继续现有 PR 分支。
+
+### 验证版本、环境与安全边界
+
+- 验证提交：`e54f7bb43caf9d59581f2ab0216c26039b08a865`。
+  此提交新增隔离故障/内存验证工具和 3 项工具安全回归；实际应用程序仍为
+  `0acd823e7e67684ae4fa9d50fa63aed5fd7f8629`，没有重复修改既有修复。
+- Windows 10 `10.0.19045.0`、Python 3.13.5、Waitress 3.0.2（8 线程）、
+  Chrome `152.0.7977.82`、Node.js v24.19.0。当地日期为 09-08，原始时间使用 UTC。
+- 合成运行根为 `%LOCALAPPDATA%\Temp\dgm-phase2-browser-9def9aedf733486e9cc633a1d4a95335`。
+  综合场景使用 `server-acceptance-20260908` / 5057；最终全新增规模验证使用
+  **另一个新建的** `server-500-final-20260908` / 5058，没有重建已有数据库。
+- `phase2_browser_harness.py` 要求专用 `SYNTHETIC_BROWSER_VALIDATION` 标记，
+  显式配置隔离 SQLite/图片目录且只监听 127.0.0.1。故障仅由本地测试控制页启用。
+  没有启动正式 `start.bat`，没有读取真实数据库或业务图片，没有再修改 ACL。
+- 无新增迁移；迁移 1/2/3 和 `attempt_count` 领取版本保护不变。上传、状态及
+  分页不调用 OCR、字段提取、车辆合并或任务领取。测试夹具中的 completed 是
+  明确设置的去重回归状态，不是执行或宣称完成了 OCR。
+
+### 真实浏览器场景与实际结果
+
+证据目录为 [issue4-browser-20260908](validation/issue4-browser-20260908/)。
+下表批次号指 5057 综合场景数据库，均是 `20260908-00N`。
+
+| 场景 | 实际操作与结果 | 截图/原始证据 |
+|---|---|---|
+| 51/52 张及 File 保留 | 批次 1 真实选择 51 张，25/25/1 上传，自动更新为 50+1 页；第二页预选另一张，往返切页后不重新选文件直接上传成功，总数 52、第二页 2 行。刷新后保留服务端结果并提示重选本地文件 | 01–03 |
+| 服务器确认中 | 批次 2 的响应延迟 8 秒；字节传输完成时显示“服务器确认中”，已确认仍为 0，收到结果后才为 1 | 04 |
+| 有限重试及后续组 | 26 张分 25+1，首组连续 3 次 HTTP 503（初次+2 次自动重试），后组仍成功；手动仅重试 25 个未确认项，最终全部确认、25 条失败均解决 | 05、synthetic_events.jsonl |
+| 列表错误恢复 | 图片列表持续 503，旧 27 行保留、错误提示可见；恢复服务并点击更新后错误消失、行数不丢失 | 06 |
+| 成功响应未交付后的重传 | 提交成功后夹具抑制成功响应、返回合成 503，并把该批次 evidence 标为 completed；浏览器自动重传后批次仍为 28 关联/28 回执，28 张 completed，attempt_count=0 | 07、raw_summary.json |
+| 64 MiB 和单文件超限 | 5 张 15,870,054 bytes BMP + 1 张 17,280,054 bytes 超限 BMP + 2 张 JPEG；首组 4 张、63,480,216 bytes，第二组 3 张、17,493,355 bytes；超限 1 张不阻断其余 7 张。明确替换后总数 8、失败 0 | 09、14 |
+| 26 条失败分页/替换 | 26 张损坏图，第一页 25 条、第二页 1 条；刷新后从具体失败行选择不同名称/大小的有效 JPEG，最早失败也成功解决；最终 26 张、26 回执、26 resolved、未解决 0 | 10、12–13、replacement-actions.json |
+| 待同步与刷新 | 上传及失败补写持续 503，明确显示“待同步 1”；刷新后只有必要元数据，显示未保留 File、必须重选；恢复正常后点击再次同步，显示“失败记录已保存”，明确替换后失败 0 | 15–18 |
+| 实际连接断开与恢复 | 仅停止本次 Waitress，真实页面上传报连接中断并保留待同步元数据；刷新显示 ERR_CONNECTION_REFUSED。用同一数据库重启，重新加载自动补写并提示重选文件；明确重传后总数 2、失败 0，再刷新仍一致 | 19–22 |
+| 上传中切页/迟到响应 | 图片响应延迟 5 秒，先刷新第一页、点击下一页并上传预选文件；逐秒观察旧表保留，最后第二页 3 行、总数 53，没有被旧页结果切回 | 23、delayed-page-actions.json |
+| 损坏与有效图同组 | 同组 2 张有效图+1 张损坏图：有效图均保存，损坏图独立失败，OCR failed=0；明确替换后 3 张、失败 0 | 24–25 |
+
+综合数据库最终为 505 份不同 SHA-256 evidence/正式图片（500 JPEG+5 BMP），
+`.incoming` 文件 0；各批次关联数依次 53/28/500/8/26/2/3，全部未解决失败 0，
+外键检查为空，最大 attempt_count=0。26 条与超过默认 25 条上限的 **61 条**完整恢复
+另由 pytest 回归覆盖；并非 126 条。跨批次、同名不同图、重复补写与成功重传交错
+由既有 Python/JS 回归覆盖，不能把这些额外组合记为逐个浏览器操作。
+
+### 最终全新增 500 张：数据、时间和数量
+
+综合场景先完成过一次 500 张（420 added/80 reused），保留为本轮前一次测量，见
+`raw_summary.json`、`raw_monitor.json`、`raw_browser_memory.json` 和截图 08。
+**以下最终结果来自 5058 全新隔离数据库，不与前一次或历史 Python 客户端混用。**
+
+- 真实选择 500 张不同内容 JPEG，500 个 SHA-256，分辨率全部 1600×1200；
+  单图 712,184–1,002,456 bytes，总净大小 **438,074,092 bytes**（417.78 MiB）。
+- 默认 25 张/64 MiB，单文件 16 MiB；实际 **20×25 串行组**，最大在途上传 1；
+  每组净大小 21,186,704–22,471,735 bytes。
+- 浏览器点击操作发出：2026-09-07T23:18:29.916Z；观察到确认 500：
+  23:18:45.127Z；**15.211 秒**。这是操作发出到 UI 确认被观察到的耗时，包含
+  控制调度时间（点击调用 23:18:32.937Z 返回）及约 1 秒观察间隔，不是精确网络计时。
+- 服务端应用处理窗口：23:18:33.016901Z–23:18:44.500448Z，**11.483547 秒**。
+  Waitress 在进入 Flask 前接收请求体，所以该窗口不包含首个请求完整的网络接收时间，
+  不应替代上面的浏览器操作耗时。
+- 结果：**500 added、0 reused、0 already_in_batch、0 failed**；页面已确认 500、
+  已保存 500、queued 500，第一页 50 行，切第二页后也为 50 行。
+- 独立数据库最终 evidence/不同 SHA-256/batch_images/upload_receipts/正式磁盘图片
+  **全部为 500**；未解决失败 0、OCR failed 0、`.incoming` 0、attempt_count 最大 0、
+  `PRAGMA foreign_key_check` 无结果。
+
+最终截图：[500 张全部确认](validation/issue4-browser-20260908/27-final-browser-500-complete.png)。
+原始数据：[final_summary.json](validation/issue4-browser-20260908/final_summary.json)、
+[浏览器计时](validation/issue4-browser-20260908/final_browser_timing.json)、
+[逐请求事件](validation/issue4-browser-20260908/final_events.jsonl)、
+[最终 DOM](validation/issue4-browser-20260908/final_browser_dom.json)。
+
+### 性能窗口与真实内存口径
+
+- 状态接口每秒采样，窗口 23:17:27.695Z–23:18:56.751Z，共 89.056 秒/89 样本；
+  比服务端上传窗口早 65.321901 秒、晚 12.250552 秒，完整包含浏览器操作窗口。
+  完整窗口 p95 **34.676 ms**，最大 **46.977 ms**，HTTP 失败 **0**；metrics 失败 0。
+- 单独截取服务端上传窗口内的 11 个样本，p95/最大均 **35.957 ms**，HTTP 失败 0。
+  p95 使用 nearest-rank，小样本 p95 与最大相同是预期，不与完整窗口混用。
+- 服务端采样工作集最大 **49,397,760 bytes**；进程生命周期峰值工作集
+  **51,490,816 bytes**，来自 Windows `GetProcessMemoryInfo` 的
+  `PROCESS_MEMORY_COUNTERS.PeakWorkingSetSize`，包括进程上传前的高水位。
+  此次未启用 tracemalloc，原始兼容字段 0 不能解释为“没有 Python 内存占用”。
+- 浏览器每秒读取 Windows `Get-Process chrome` 的 `WorkingSet64` 和
+  `PrivateMemorySize64`，将全部 Chrome 进程求和。57 个样本，
+  23:17:58.7896281Z–23:18:55.5665223Z，完整覆盖上传。
+  工作集开始 **4,111,142,912**、结束 **4,189,855,744**、采样最大
+  **4,433,862,656 bytes**；私有内存采样最大 **4,374,765,568 bytes**。
+  **包含用户既有无关标签和扩展，不能归因为本测试单标签内存，也不是生命周期峰值。**
+  没有把 Python 上传客户端内存充当浏览器内存。
+
+原始证据：[状态/服务端内存](validation/issue4-browser-20260908/final_monitor.json)、
+[Chrome 实际内存采样](validation/issue4-browser-20260908/final_browser_memory.json)。
+没有保存页面标题、进程命令行或真实业务数据。
+
+### 命令、自动化及交付检查
+
+以 `$phase2BrowserRun` 表示上面的已解析合成根，`$evidence` 表示本轮证据目录。
+实际使用项目 `.venv\Scripts\python.exe`，命令中的变量需先在本机设置；未使用生产启动器。
+
+```powershell
+.\.venv\Scripts\python.exe scripts\phase2_browser_harness.py "$phase2BrowserRun\server-500-final-20260908" --port 5058
+.\.venv\Scripts\python.exe scripts\phase2_validation.py monitor http://127.0.0.1:5058 1 .phase2-validation-browser-monitor-final-20260908.stop "$evidence\final_monitor.json" --commit-sha e54f7bb43caf9d59581f2ab0216c26039b08a865
+.\scripts\measure_browser_memory.ps1 -StopFile "$PWD\.phase2-validation-browser-monitor-final-20260908.stop" -OutputFile "$evidence\final_browser_memory.json"
+.\.venv\Scripts\python.exe -m pytest -p no:cacheprovider --basetemp .pytest-tmp-browser-20260908-delivery
+node --test tests/js/batch_upload_state.test.js tests/js/batch_images.test.js
+.\.venv\Scripts\python.exe -m compileall -q app.py config.py database.py storage.py worker.py scripts tests
+.\.venv\Scripts\python.exe -m pip check
+node --check static/batch_upload.js
+node --check static/batch_upload_state.js
+node --check static/batch_images.js
+git diff --check
+```
+
+上传本身由浏览器 chooser 选取全部 500 个文件并点击“开始上传”，没有 Python upload
+命令。停止采样由本次专用 stop 文件触发；复跑应使用新的 stop 文件而非已有标记。
+原有 39 项 pytest 保留，本轮集合为 59 项（含 6 项迁移测试和 3 项新工具测试），
+前一完整运行为 59 passed in 63.38s；交付复跑结果见 `raw_checks.json`。
+JavaScript 16 passed，Python 编译、三个 JS 语法、依赖检查通过。真实 Chrome
+访问 Windows/Waitress 并完成上传，同时覆盖最小启动验证。
+
+### 限制与未单独测量项
+
+- 已完成上述真实浏览器功能场景与全新增规模验证；未单独测量浏览器单标签/renderer
+  内存。全部进程聚合值只能作为该次整机 Chrome 观察，不得推断每张图片内存成本。
+- “响应丢失”浏览器夹具是提交后抑制成功 JSON 并返回 503，并非 TCP 层静默丢包；
+  真实连接拒绝另行完成。历史 TCP 丢包客户端回归仍单独保留，不冒充本次浏览器操作。
+- 26 条替换途中控制工具超时并失去旧标签连接；新连接只读核对已成功 8 条后继续，
+  最终 18 条逐条动作另存 JSON；服务端事件保留全 26 条。截图 11 在分页完成前截取，
+  **不作为第二页证据**，第二页实际 1 条使用截图 12。一次计数定位器超时发生在最终
+  500 张上传前，核对已选择 500 后才开始计时，未重复选择或上传。
+- 顶部批次状态文字在不整页刷新时可能保留打开页面的值；本轮要求的已保存/OCR
+  分类计数和图片列表都已实际更新。该展示限制保留记录，没有借验收扩展其他阶段。
+- 第三阶段 OCR Worker、GPU OCR、车辆匹配和 Excel 仍未实现；不自动合并 PR。
+
+## Sandbox 恢复与真实浏览器续验（2026-09-07 至 09-08，历史结果）
 
 用户明确授权后，仅在 `D:\Codes\DGM\.git` 目录自身为 `LUIGIWIN\swei` 添加
 `WRITE_DAC`，未设置继承标志，未递归修改，保留原所有者和其他 ACE。修改前安全
