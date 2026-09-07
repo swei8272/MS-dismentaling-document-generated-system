@@ -95,6 +95,30 @@ test("a queued forced read still runs after an earlier read fails", async () => 
   assert.equal(calls, 2);
 });
 
+test("a force in the promise settlement gap starts a new status read", async () => {
+  const first = deferred();
+  let calls = 0;
+  const refresh = state.createCoalescedRefresh(async () => {
+    calls += 1;
+    await first.promise;
+  });
+  const initial = refresh();
+  let forced;
+  let issuedResolve;
+  const issued = new Promise((resolve) => { issuedResolve = resolve; });
+  Promise.resolve().then(() => {
+    first.resolve();
+    queueMicrotask(() => queueMicrotask(() => {
+      forced = refresh({ force: true });
+      issuedResolve();
+    }));
+  });
+  await issued;
+  await forced;
+  await initial;
+  assert.equal(calls, 2);
+});
+
 test("refresh normalization keeps only metadata and never a File-like value", () => {
   const normalized = state.normalizeOutbox([
     {

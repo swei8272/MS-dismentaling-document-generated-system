@@ -15,7 +15,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import uuid
-from http.client import HTTPConnection
+from http.client import HTTPConnection, HTTPException
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -189,6 +189,8 @@ def fetch_json(url: str) -> tuple[dict, float, int, str | None]:
     try:
         with urllib.request.urlopen(url, timeout=5) as response:
             payload = json.loads(response.read().decode("utf-8"))
+            if not isinstance(payload, dict):
+                raise ValueError("JSON response must be an object")
             status = response.status
     except urllib.error.HTTPError as exc:
         payload = {}
@@ -196,9 +198,10 @@ def fetch_json(url: str) -> tuple[dict, float, int, str | None]:
         error = f"{type(exc).__name__}: {exc}"
     except (
         urllib.error.URLError,
+        HTTPException,
         TimeoutError,
         OSError,
-        json.JSONDecodeError,
+        ValueError,
         UnicodeDecodeError,
     ) as exc:
         payload = {}

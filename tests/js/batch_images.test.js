@@ -60,6 +60,34 @@ test("same-page response started before a forced refresh is never rendered", asy
   assert.deepEqual(rendered, [51]);
 });
 
+test("a force in the promise settlement gap starts a new image read", async () => {
+  const first = deferred();
+  let calls = 0;
+  const loader = createLoader({
+    request: () => {
+      calls += 1;
+      return first.promise;
+    },
+    render: () => {},
+    onError: assert.fail,
+  });
+  const initial = loader.refresh();
+  let forced;
+  let issuedResolve;
+  const issued = new Promise((resolve) => { issuedResolve = resolve; });
+  Promise.resolve().then(() => {
+    first.resolve({ page: 1, total: 50 });
+    queueMicrotask(() => queueMicrotask(() => {
+      forced = loader.refresh(undefined, { force: true });
+      issuedResolve();
+    }));
+  });
+  await issued;
+  await forced;
+  await initial;
+  assert.equal(calls, 2);
+});
+
 test("failed update preserves displayed rows and recovers on next poll", async () => {
   let calls = 0, errors = 0, displayed = "old rows";
   const loader = createLoader({

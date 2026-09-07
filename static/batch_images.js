@@ -26,20 +26,26 @@
       }
       // Defer the first request so pending is set even for a synchronous mock.
       pending = Promise.resolve().then(async () => {
-        do {
-          queued = false;
-          const requestedVersion = version;
-          try {
-            const payload = await request(desiredPage);
-            if (requestedVersion === version) {
-              render(payload);
-              desiredPage = payload.page;
+        try {
+          do {
+            queued = false;
+            const requestedVersion = version;
+            try {
+              const payload = await request(desiredPage);
+              if (requestedVersion === version) {
+                render(payload);
+                desiredPage = payload.page;
+              }
+            } catch (_error) {
+              if (requestedVersion === version) onError();
             }
-          } catch (_error) {
-            if (requestedVersion === version) onError();
-          }
-        } while (queued);
-      }).finally(() => { pending = null; });
+          } while (queued);
+        } finally {
+          // Clear in the runner before its promise settles, leaving no window
+          // where a force can attach to a loop that has already exited.
+          pending = null;
+        }
+      });
       return pending;
     }
     return { refresh };

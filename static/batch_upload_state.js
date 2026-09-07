@@ -121,8 +121,8 @@
         if (force) forceQueued = true;
         return pending;
       }
-      pending = Promise.resolve()
-        .then(async function () {
+      pending = Promise.resolve().then(async function () {
+        try {
           let lastError;
           do {
             // A force queued before this operation starts is already covered
@@ -136,10 +136,12 @@
             }
           } while (forceQueued);
           if (lastError) throw lastError;
-        })
-        .finally(function () {
+        } finally {
+          // Clear before this runner settles. Otherwise a force in the
+          // promise-settlement microtask gap can attach to a finished runner.
           pending = null;
-        });
+        }
+      });
       return pending;
     }
 
