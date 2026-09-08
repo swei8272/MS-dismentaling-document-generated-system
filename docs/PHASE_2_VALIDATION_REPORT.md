@@ -1,9 +1,91 @@
 # 第二阶段验证报告
 
-本报告按时间分别保留历史结果；最新结论以紧接下方的 2026-09-08 浏览器实测为准。
+本报告按轮次保留历史结果；证据校正以紧接下方的 2026-09-08 补拍章节为准。
 全部验证均使用合成图片和隔离数据库，未读取、修改、删除或重建真实业务数据。
 
-## 状态徽标修复与最终代码复验（2026-09-08，当前结果）
+## 证据校正与真实浏览器补拍（2026-09-08，本次结果）
+
+审查/运行 checkout：`49a85633ffc454b7b2ed4bf1cc60c3c98799342f`；
+**本次验证程序 SHA：`7b71407bed03eda7a65e4e7803267fba956cd213`**。
+开始前完整阅读 AGENTS、Issue #4、阶段任务/验收文档及 PR #5 正文、评论，
+本地和 PR 远端均为 49a85633，无新增评论/后续修复。按用户要求继续原 PR 分支，
+保留三个既有未跟踪 stop 标记。程序、迁移、测试及验证服务脚本相对 7b71407 无差异；
+本次没有发现需修改程序的缺陷，只修正证据说明、补拍及保存新测试输出。
+
+环境沿用 Windows 10 10.0.19045、Python 3.13.5、Waitress 3.0.2 / 8 线程、
+Chrome 152.0.7977.82、Node.js v24.19.0。以下时间均为 UTC（本地 Brisbane +10）。
+新证据目录：[issue4-evidence-correction-20260908](validation/issue4-evidence-correction-20260908/README.md)。
+每张截图的同名 `.dom.json` 保存 SHA、隔离根/批次、操作步骤、捕获前后时间和 DOM。
+先读取预期页码/计数，等待稳定并定位画面，再截图，随后再次读取 DOM；六张 PNG
+均已重新打开检查真实像素内容，不能只根据文件名或点击返回成功判定。
+
+### 逐项校正和新增证据
+
+| 场景/旧证据实际内容 | 本次操作与实际结果 | 新证据（截图 + 同名 DOM） |
+|---|---|---|
+| 旧 12 仍为第 1/2 页，不是失败第二页；11 也不能证明第二页 | 新隔离批次 1 上传 26 张损坏夹具，刷新后点击下一页；稳定为第 2/2 页，**仅 1 条，failure ID 1**，总失败 26 | [31](validation/issue4-evidence-correction-20260908/31-failures-page2.png)、[DOM](validation/issue4-evidence-correction-20260908/31-failures-page2.dom.json)；01:59:32.660–01:59:33.990Z |
+| 旧 17 为待同步；旧 18 才是元数据已保存、仍未解决，不是成功替换终态 | 新隔离批次 2 注入上传/补写 503，刷新后恢复夹具并等待自动补写；32 为已保存 failure ID 27、图片 0/失败 1。明确为该行选择 synthetic-0081 替换原 synthetic-0080，33 为**保存 1、未解决 0、图片 1 行** | [32](validation/issue4-evidence-correction-20260908/32-outbox-saved-unresolved.png)、[32 DOM](validation/issue4-evidence-correction-20260908/32-outbox-saved-unresolved.dom.json)、[33](validation/issue4-evidence-correction-20260908/33-outbox-replaced-final.png)、[33 DOM](validation/issue4-evidence-correction-20260908/33-outbox-replaced-final.dom.json) |
+| 旧 24 为上传前（保存 0、等待 3）；旧 25 为保存 2、失败 1，不是替换终态 | 新隔离批次 3 同组上传 synthetic-0084、damaged-00、synthetic-0085；34 确认保存 2/未解决 1。为 failure ID 28 明确选 synthetic-0086，35 为**保存 3、未解决 0、OCR failed 0、图片 3 行** | [34](validation/issue4-evidence-correction-20260908/34-mixed-saved2-failed1.png)、[34 DOM](validation/issue4-evidence-correction-20260908/34-mixed-saved2-failed1.dom.json)、[35](validation/issue4-evidence-correction-20260908/35-mixed-replaced-final.png)、[35 DOM](validation/issue4-evidence-correction-20260908/35-mixed-replaced-final.dom.json) |
+| 旧 28 是第 1/10 页，不能证明第二页 | 重开保留的 server-500-final-20260908 批次 1，仅翻页不上传；36 整页显示**第 2/10 页、50 行、序号 51–100**，保存仍 500 | [36](validation/issue4-evidence-correction-20260908/36-retained-500-page2-full.png)、[DOM](validation/issue4-evidence-correction-20260908/36-retained-500-page2.dom.json)；02:03:20.150–02:03:24.932Z |
+
+新批次 1/2/3 均在 `server-evidence-correction-20260908` / 5057，编号分别为
+20260908-001/002/003，不与旧综合数据库的同号批次混同。合成临时根和启动命令见
+新目录 README。失败数为 0 时应用原设计隐藏失败面板；33/35 的截图可见本轮
+“失败/未确认 0”，服务端未解决为 0 由截图前后 DOM 和独立只读 SQLite 一致确认，
+没有改写页面让截图显示额外的零值。
+
+旧证据全部保留，不覆盖任何历史 PNG/DOM/测量文件。旧
+`final_browser_dom.json` 是 **2026-09-07T23:21:07.667Z**、e54f7bb checkout
+（应用 0acd823）时的第二页 DOM，只含页码/50 行摘要；新 36 是翌日 UTC、
+应用 7b71407 重开同一保留批次时的画面和完整 51–100 行，**不是旧 DOM 的配图或
+历史上传期间截图**。原 500 张上传、性能和内存已核实，本次没有重跑、没有新采样。
+
+### 完整测试输出：新运行，不补造历史日志
+
+未找回历史 60 pytest / 17 JS 的完整 stdout/stderr；原 `verified_checks.json`
+仅是历史摘要，保留原 59.65s，不当作完整日志。因此在上述未变程序上新运行：
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest -p no:cacheprovider --basetemp .pytest-tmp-evidence-20260908T015527Z
+node --test tests/js/batch_upload_state.test.js tests/js/batch_images.test.js
+```
+
+- pytest：**60 passed in 134.17s**，进程墙钟 141.495 秒；
+  2026-09-08T01:55:27.870822Z–01:57:49.364734Z，退出码 **0**。
+  [完整 stdout](validation/issue4-evidence-correction-20260908/pytest.stdout.txt)、
+  [完整 stderr（0 bytes）](validation/issue4-evidence-correction-20260908/pytest.stderr.txt)。
+- JavaScript：**17 passed、0 failed**，Node 内部 181.7648 ms，进程墙钟 0.373 秒；
+  01:57:49.364832Z–01:57:49.737984Z，退出码 **0**。
+  [完整 stdout](validation/issue4-evidence-correction-20260908/javascript.stdout.txt)、
+  [完整 stderr（0 bytes）](validation/issue4-evidence-correction-20260908/javascript.stderr.txt)。
+- [test_run.json](validation/issue4-evidence-correction-20260908/test_run.json) 保存实际命令、
+  时间和退出码；`run_checks.py` 直接把子进程 stdout/stderr 写入独立文件，拒绝覆盖。
+  原 39 项 pytest 和领取保护未删除，6 项迁移幂等测试包含在本次 60 项内。
+- 本次另执行 Python 编译、三个 JS 语法检查、`pip check`、`git diff --check` 及
+  7b71407 程序差异检查，退出码均 0；截图哈希、前后 DOM 条件、JSON 和文档链接
+  核验通过。实际新时间/输出见 [delivery_checks.json](validation/issue4-evidence-correction-20260908/delivery_checks.json)。
+
+### 数据核对、限制与收尾
+
+[isolated_state.json](validation/issue4-evidence-correction-20260908/isolated_state.json)
+使用 SQLite `mode=ro`：新批次 2 的 failure 27、批次 3 的 failure 28 均 resolved，
+各自未解决 0；图片分别 1/3。新库 evidence/不同 SHA/回执/磁盘图片各 4、queued 4、
+OCR failed 0、attempt_count 最大 0、外键无错误。新批次 1 **有意保留 26 条未解决**
+供复核分页，不能声称本次新库全局失败为 0；26 条全部恢复的历史终态仍引用旧
+29 + `final_26_dom.json` 和原数据库摘要，本次 pytest 另覆盖 26/61 条恢复。
+保留 500 库仍为 evidence/不同 SHA/回执/关联/磁盘各 500，只有原来的 20 次上传，
+本次 UTC 日期新增上传 0。补拍服务已经原执行会话 Ctrl+C 停止，5057/5058 监听 0。
+
+截图 31 第一次 fullPage 捕获曾返回 `Timed out after 5000ms waiting for CDP command
+Page.captureScreenshot`，没有生成文件；重新观察稳定页、定位标题后用视口截图成功。
+该错误单独记录，不冒称 sandbox 故障。六张新图复核及 SHA-256 见
+[visual_review.json](validation/issue4-evidence-correction-20260908/visual_review.json)。
+未改系统 ACL、未关闭 sandbox、未触碰真实业务数据、无新增迁移/程序修复；未合并
+PR、未进入第三阶段。本次四项证据缺口已补齐；**历史完整测试输出仍不可追溯**，
+以明确标时的新运行补充。单标签 renderer 内存、真实浏览器 TCP 静默丢包仍未单独
+验证；提交后 503 和全 Chrome 聚合内存不能代替这两项，也没有在本轮扩大结论。
+
+## 状态徽标修复与最终代码复验（2026-09-08，历史运行：7b71407）
 
 **最终验证代码 SHA：`7b71407bed03eda7a65e4e7803267fba956cd213`。**
 下节保留同日修复前 `e54f7bb` 的完整浏览器故障场景及规模数据；不能把其中的
@@ -15,7 +97,7 @@
 `templates/batch_detail.html`、`static/batch_upload.js`、`static/batch_upload_state.js`
 和两份回归测试；没有更改上传事务、失败关联、outbox、迁移或领取版本保护。
 
-### 最终提交的实际检查
+### 该轮 7b71407 提交的实际检查（历史摘要）
 
 - 全部 pytest：**60 passed in 59.65s**，原有 39 项保留，含 6 项迁移测试。
   命令：`.venv\Scripts\python.exe -m pytest -p no:cacheprovider --basetemp .pytest-tmp-browser-7b71407-final`。
@@ -88,14 +170,15 @@ PrivateMemorySize64 聚合，共 57 样本，23:30:05.4410947Z–23:31:02.224953
 终态截图。随后独立重开原批次，DOM 为保存 26、图片 26 行、失败 0，重新保存
 [截图 29](validation/issue4-browser-20260908/29-failures-26-final-settled.png) 和
 [final_26_dom.json](validation/issue4-browser-20260908/final_26_dom.json)，并与 SQLite
-26 resolved/0 unresolved 一致。截图 11 同样是分页中间帧，使用截图 12 替代。
+26 resolved/0 unresolved 一致。截图 11、12 都未显示失败第二页；后续补拍用新目录
+31 替代其第二页证明，详见本报告顶部校正章节。
 
 尚未单独验证/测量：单标签 renderer 内存，以及浏览器 TCP 层静默丢弃成功响应。
 本轮浏览器响应抑制为提交后返回合成 503，真实连接断开另外通过停止隔离 Waitress
 制造；两者不等同于 TCP 丢包。额外跨批次/同名/重复补写交错组合有回归覆盖，
 不宣称每种组合都逐一手动操作过。历史阻断和历史 Python 性能数据继续独立保留。
 
-## 真实浏览器验收及 500 张实测（2026-09-08，徽标修复前结果）
+## 真实浏览器验收及 500 张实测（2026-09-08，历史运行：徽标修复前）
 
 此前 sandbox 与文件选择器阻断已经解除。本轮使用受支持的真实 Chrome 扩展控制、
 页面文件选择器和上传按钮完成下列操作，**不再以 API 上传或模拟 DOM 代替浏览器验收**。
@@ -132,11 +215,11 @@ PrivateMemorySize64 聚合，共 57 样本，23:30:05.4410947Z–23:31:02.224953
 | 列表错误恢复 | 图片列表持续 503，旧 27 行保留、错误提示可见；恢复服务并点击更新后错误消失、行数不丢失 | 06 |
 | 成功响应未交付后的重传 | 提交成功后夹具抑制成功响应、返回合成 503，并把该批次 evidence 标为 completed；浏览器自动重传后批次仍为 28 关联/28 回执，28 张 completed，attempt_count=0 | 07、raw_summary.json |
 | 64 MiB 和单文件超限 | 5 张 15,870,054 bytes BMP + 1 张 17,280,054 bytes 超限 BMP + 2 张 JPEG；首组 4 张、63,480,216 bytes，第二组 3 张、17,493,355 bytes；超限 1 张不阻断其余 7 张。明确替换后总数 8、失败 0 | 09、14 |
-| 26 条失败分页/替换 | 26 张损坏图，第一页 25 条、第二页 1 条；刷新后从具体失败行选择不同名称/大小的有效 JPEG，最早失败也成功解决；最终 26 张、26 回执、26 resolved、未解决 0 | 10、12–13、replacement-actions.json |
-| 待同步与刷新 | 上传及失败补写持续 503，明确显示“待同步 1”；刷新后只有必要元数据，显示未保留 File、必须重选；恢复正常后点击再次同步，显示“失败记录已保存”，明确替换后失败 0 | 15–18 |
+| 26 条失败分页/替换 | 原终态 26 张、26 resolved/未解决 0 有独立证据；旧 12 实际仍第一页、13 仍在绘制，均不能证明预期终态 | 10；终态 29 + final_26_dom.json；分页补拍新目录 31；replacement-actions.json 仅后 18 次动作 |
+| 待同步与刷新 | 上传及补写 503，刷新提示重选；旧 17 为待同步，18 为失败元数据已保存但尚未解决，不能证明成功替换 | 15–18 保留各自实际状态；新目录 32 已保存/未解决，33 保存 1/未解决 0 |
 | 实际连接断开与恢复 | 仅停止本次 Waitress，真实页面上传报连接中断并保留待同步元数据；刷新显示 ERR_CONNECTION_REFUSED。用同一数据库重启，重新加载自动补写并提示重选文件；明确重传后总数 2、失败 0，再刷新仍一致 | 19–22 |
 | 上传中切页/迟到响应 | 图片响应延迟 5 秒，先刷新第一页、点击下一页并上传预选文件；逐秒观察旧表保留，最后第二页 3 行、总数 53，没有被旧页结果切回 | 23、delayed-page-actions.json |
-| 损坏与有效图同组 | 同组 2 张有效图+1 张损坏图：有效图均保存，损坏图独立失败，OCR failed=0；明确替换后 3 张、失败 0 | 24–25 |
+| 损坏与有效图同组 | 旧 24 是上传前；25 是保存 2/失败 1、OCR failed 0，不是替换终态。原数据库总数 3 的摘要单独保留，不把它冒充旧图内容 | 24–25 保留；新目录 34 为部分成功、35 为替换后保存 3/未解决 0/OCR failed 0 |
 
 综合数据库最终为 505 份不同 SHA-256 evidence/正式图片（500 JPEG+5 BMP），
 `.incoming` 文件 0；各批次关联数依次 53/28/500/8/26/2/3，全部未解决失败 0，
@@ -171,6 +254,8 @@ PrivateMemorySize64 聚合，共 57 样本，23:30:05.4410947Z–23:31:02.224953
 [浏览器计时](validation/issue4-browser-20260908/final_browser_timing.json)、
 [逐请求事件](validation/issue4-browser-20260908/final_events.jsonl)、
 [最终 DOM](validation/issue4-browser-20260908/final_browser_dom.json)。
+旧截图 28 实际为第 1/10 页；上列历史 DOM 记录第二页，但不是该截图同一时刻的画面。
+保留批次的第二页截图与完整 50 行 DOM 已另在新目录 36 补拍，时间/代码见顶部章节。
 
 ### 性能窗口与真实内存口径
 
@@ -229,7 +314,7 @@ JavaScript 16 passed，Python 编译、三个 JS 语法、依赖检查通过。�
   真实连接拒绝另行完成。历史 TCP 丢包客户端回归仍单独保留，不冒充本次浏览器操作。
 - 26 条替换途中控制工具超时并失去旧标签连接；新连接只读核对已成功 8 条后继续，
   最终 18 条逐条动作另存 JSON；服务端事件保留全 26 条。截图 11 在分页完成前截取，
-  **不作为第二页证据**，第二页实际 1 条使用截图 12。一次计数定位器超时发生在最终
+  **不作为第二页证据**；旧 12 也仍是第一页，后续新目录 31 才是第二页补拍。一次计数定位器超时发生在最终
   500 张上传前，核对已选择 500 后才开始计时，未重复选择或上传。
 - 顶部批次状态文字在不整页刷新时可能保留打开页面的值；本轮要求的已保存/OCR
   分类计数和图片列表都已实际更新。该展示限制保留记录，没有借验收扩展其他阶段。
@@ -270,7 +355,7 @@ ChatGPT 扩展启用 “Allow access to file URLs”；本轮未更改该权限�
 ## Sandbox 底层错误核实（2026-09-07，历史诊断）
 
 本轮读取实际轮转日志 `%CODEX_HOME%/.sandbox/sandbox.2026-09-07.log`；
-无日期的 `sandbox.log` 不存在。未读取或输出 `.sandbox-secrets`。最新复现为
+无日期的 `sandbox.log` 不存在。未读取或输出 `.sandbox-secrets`。该轮复现为
 2026-09-07T12:17:26.618664900Z：在 `workspace-write` 模式启动只读 `whoami`
 之前，setup helper 失败；命令本身未执行。
 
@@ -292,10 +377,10 @@ ChatGPT 扩展启用 “Allow access to file URLs”；本轮未更改该权限�
 未实际启动的 sandbox 子进程无法执行 `whoami`；不能把本机 Codex 父进程的
 `swei` 身份误记成已经观测到的 sandbox 子进程身份，也未读取账户凭据验证登录。
 
-当前 Codex 父进程由 `swei` 运行，非提升令牌中 Administrators 仅用于 deny。
+当时 Codex 父进程由 `swei` 运行，非提升令牌中 Administrators 仅用于 deny。
 `.git` 所有者是 Offline，DACL 给 Authenticated Users / CodexSandboxUsers
 Modify，给 Administrators FullControl；没有给 `swei` 有效的 ChangePermissions
-授权。Modify 不包含修改 DACL 的 `WRITE_DAC`。结合 helper 的错误，当前证据
+授权。Modify 不包含修改 DACL 的 `WRITE_DAC`。结合 helper 的错误，当时证据
 指向 setup 阶段不能为 `.git` 安装拒绝 ACE；未捕获短生命周期 helper 自身令牌，
 其身份沿用父进程是推断。**此前 `.pytest_cache` 是根因的推测已被本轮日志更正。**
 
@@ -371,7 +456,7 @@ workspace sandbox refresh 阶段一致；本轮没有改变该目录或 ACL，�
 登记为本轮新结果。**浏览器验收未完成，第二阶段尚未全部通过；PR 未合并，也未
 进入第三阶段。**
 
-## 命令修订与浏览器验收交接（2026-09-07）
+## 命令修订与浏览器验收交接（2026-09-07，历史结果）
 
 本次仅更新文档：Windows 命令已改为单行，不再使用反斜杠续行。
 规模验证命令中的 `<fresh-stop-file>`、`<raw_monitor.json>` 等仍是历史命令
@@ -386,9 +471,9 @@ HTTP 200 且包含“批次管理”。云端 Chrome 打开同一本地 URL 时�
 程序代码和此前 Windows 测量未改变，本次不重复记入自动化或性能通过次数。
 下一步仍是本机真实浏览器验收，第二阶段尚未全部通过；未合并 PR，未进入第三阶段。
 
-## 最新状态：按 3413bc6b 补修与 Windows 验收（2026-09-07）
+## 按 3413bc6b 补修与 Windows 验收（2026-09-07，历史结果）
 
-本节是当前结果。验证代码提交为
+本节仅保留该轮历史结果。验证代码提交为
 `0acd823e7e67684ae4fa9d50fa63aed5fd7f8629`，基线为
 `3413bc6b54bf4a6896f8420b95c2db42c4e510f9`。继续使用 PR #5 的
 `codex/issue-4-batch-upload-progress` 分支，未合并，也未进入第三阶段。
@@ -411,7 +496,7 @@ HTTP 200 且包含“批次管理”。云端 Chrome 打开同一本地 URL 时�
 `attempt_count` 领取版本保护保持不变。上传、状态、图片列表和失败分页没有调用
 OCR、字段提取、车辆合并或任务领取。
 
-### 2. 当前提交的自动化与 Windows 最小启动
+### 2. 该轮提交的自动化与 Windows 最小启动
 
 环境：Windows 10 10.0.19045 SP0，Python 3.13.5，Node.js v24.19.0，
 Waitress 3.0.2（8 线程）。
@@ -433,7 +518,7 @@ Waitress 3.0.2（8 线程）。
 [raw_checks.json](validation/issue4-final-0acd823/raw_checks.json)、
 [raw_startup.json](validation/issue4-final-0acd823/raw_startup.json)。
 
-### 3. 当前提交的 500 张 Windows / Waitress 规模验证
+### 3. 该轮提交的 500 张 Windows / Waitress 规模验证
 
 验证命令：
 
@@ -516,14 +601,14 @@ Waitress 3.0.2（8 线程）。
 源合成图只读复用。未读取、修改、删除或重建 `data/vehicles.db`、业务上传、
 备份或导出文件。
 
-## 上一轮：图片列表刷新修复（2026-09-07）
+## 图片列表刷新修复（2026-09-07，历史结果）
 
-本节保留 3413bc6b 时记录的上一轮结果；其浏览器限制和未完成项已由上方当前
-Windows 结果重新核对。下方一、二节继续保留更早的 Windows 验证与历史结果。
+本节保留 3413bc6b 时记录的历史结果；其浏览器限制和未完成项已由后续
+Windows 运行重新核对。下方一、二节继续保留更早的 Windows 验证与历史结果。
 
 - 验证代码提交：`26f232093d7e4e90b62f2b6cff1441f9cb725e98`。
 - 基线：`1613ec18dca0fee88a51af53ef17919597cfe747`；继续原 PR #5 分支，未合并。
-- 环境：Linux / Python 3.12.13 / Node.js v24.19.0。当前环境不能访问用户的
+- 环境：Linux / Python 3.12.13 / Node.js v24.19.0。当时环境不能访问用户的
   Windows 正式部署目录，所有测试使用临时数据库、合成图片。
 
 ### 修复内容
@@ -578,7 +663,7 @@ Windows 结果重新核对。下方一、二节继续保留更早的 Windows 验
 此前 Windows 的 500 张、137.401 秒等数据仍只对应 `f0e72da`，本次未重跑，
 不得转记为本次代码或浏览器的验证结果。
 
-## 一、本次审查修复验证（2026-09-07）
+## 一、初次审查修复验证（2026-09-07，历史结果）
 
 ### 1. 验证版本与环境
 
@@ -591,7 +676,7 @@ Windows 结果重新核对。下方一、二节继续保留更早的 Windows 验
 - JavaScript：Node.js v24.19.0。
 - 数据：.phase2-validation-fix 下的隔离数据库、上传目录和 500 张合成图。
 
-验证前已核对 PR #5 最新提交和评论：远端仍停留在审查基线，没有后续修复或
+该轮验证前已核对 PR #5 当时的提交和评论：远端仍停留在审查基线，没有后续修复或
 未处理评论，因此所有修复都从该基线继续完成。
 
 ### 2. 发现的问题与修复

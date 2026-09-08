@@ -1,0 +1,210 @@
+{
+  "application_code_sha": "7b71407bed03eda7a65e4e7803267fba956cd213",
+  "checkout_sha": "49a85633ffc454b7b2ed4bf1cc60c3c98799342f",
+  "collected_at_utc": "2026-09-08T02:10:58.335386+00:00",
+  "roots": [
+    {
+      "root": "server-evidence-correction-20260908",
+      "batches": [
+        {
+          "id": 1,
+          "images": 0,
+          "unresolved": 26,
+          "resolved": 0,
+          "failure_ids_and_status": [
+            [
+              1,
+              "failed",
+              null
+            ],
+            [
+              2,
+              "failed",
+              null
+            ],
+            [
+              3,
+              "failed",
+              null
+            ],
+            [
+              4,
+              "failed",
+              null
+            ],
+            [
+              5,
+              "failed",
+              null
+            ],
+            [
+              6,
+              "failed",
+              null
+            ],
+            [
+              7,
+              "failed",
+              null
+            ],
+            [
+              8,
+              "failed",
+              null
+            ],
+            [
+              9,
+              "failed",
+              null
+            ],
+            [
+              10,
+              "failed",
+              null
+            ],
+            [
+              11,
+              "failed",
+              null
+            ],
+            [
+              12,
+              "failed",
+              null
+            ],
+            [
+              13,
+              "failed",
+              null
+            ],
+            [
+              14,
+              "failed",
+              null
+            ],
+            [
+              15,
+              "failed",
+              null
+            ],
+            [
+              16,
+              "failed",
+              null
+            ],
+            [
+              17,
+              "failed",
+              null
+            ],
+            [
+              18,
+              "failed",
+              null
+            ],
+            [
+              19,
+              "failed",
+              null
+            ],
+            [
+              20,
+              "failed",
+              null
+            ],
+            [
+              21,
+              "failed",
+              null
+            ],
+            [
+              22,
+              "failed",
+              null
+            ],
+            [
+              23,
+              "failed",
+              null
+            ],
+            [
+              24,
+              "failed",
+              null
+            ],
+            [
+              25,
+              "failed",
+              null
+            ],
+            [
+              26,
+              "failed",
+              null
+            ]
+          ]
+        },
+        {
+          "id": 2,
+          "images": 1,
+          "unresolved": 0,
+          "resolved": 1,
+          "failure_ids_and_status": [
+            [
+              27,
+              "resolved",
+              1
+            ]
+          ]
+        },
+        {
+          "id": 3,
+          "images": 3,
+          "unresolved": 0,
+          "resolved": 1,
+          "failure_ids_and_status": [
+            [
+              28,
+              "resolved",
+              4
+            ]
+          ]
+        }
+      ],
+      "evidence": 4,
+      "sha256_count": 4,
+      "receipts": 4,
+      "ocr_states": {
+        "queued": 4
+      },
+      "max_attempt_count": 0,
+      "foreign_key_errors": [],
+      "formal_disk_files": 4,
+      "upload_starts_all_time": 8,
+      "upload_starts_since_20260908_utc": 8
+    },
+    {
+      "root": "server-500-final-20260908",
+      "batches": [
+        {
+          "id": 1,
+          "images": 500,
+          "unresolved": 0,
+          "resolved": 0,
+          "failure_ids_and_status": []
+        }
+      ],
+      "evidence": 500,
+      "sha256_count": 500,
+      "receipts": 500,
+      "ocr_states": {
+        "queued": 500
+      },
+      "max_attempt_count": 0,
+      "foreign_key_errors": [],
+      "formal_disk_files": 500,
+      "upload_starts_all_time": 20,
+      "upload_starts_since_20260908_utc": 0
+    }
+  ]
+}

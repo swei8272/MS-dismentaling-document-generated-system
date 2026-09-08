@@ -1,0 +1,42 @@
+{
+  "review_recorded_at_utc": "2026-09-08T02:10:58.661725+00:00",
+  "method": "All six saved PNG files were reopened with view_image and visually checked by the agent in this turn; timestamp is review record creation, not historical capture time.",
+  "files": [
+    {
+      "file": "31-failures-page2.png",
+      "sha256": "37f9714f6b4e346fe6888e308691d1dbac2a83fcfe888cf690fd5d3607972da0",
+      "size_bytes": 111026,
+      "visual_result": "Visible page 2/2, exactly one failure row, ID 1; total 26."
+    },
+    {
+      "file": "32-outbox-saved-unresolved.png",
+      "sha256": "660032b690c350479fbb878bfbeedc088f538678f0af2bc00124e20872e365ef",
+      "size_bytes": 137954,
+      "visual_result": "Saved metadata badge; saved images 0, one unresolved failure, ID 27."
+    },
+    {
+      "file": "33-outbox-replaced-final.png",
+      "sha256": "fd5e21742aea85c22e72d1dc69bfb8f82d36b1bd37fe3d57f430a87fda43784a",
+      "size_bytes": 110902,
+      "visual_result": "Saved 1; local failed/unconfirmed 0; one image row; unresolved panel hidden (DOM 0)."
+    },
+    {
+      "file": "34-mixed-saved2-failed1.png",
+      "sha256": "2c872855a7eb97c55cbff316c23a62a089dca22eb8ed94f26bcbbca65b6abd3c",
+      "size_bytes": 162403,
+      "visual_result": "Saved 2, local failed 1, failure ID 28, OCR failed 0, two image rows."
+    },
+    {
+      "file": "35-mixed-replaced-final.png",
+      "sha256": "3c55e2f531dcf019b35d1de4c3fc176050cddf9f46b4c4ad46861daa1ae818fe",
+      "size_bytes": 137380,
+      "visual_result": "Saved 3, confirmed 3, local failed 0, OCR failed 0, three image rows; unresolved panel hidden (DOM 0)."
+    },
+    {
+      "file": "36-retained-500-page2-full.png",
+      "sha256": "7d4e77f28a0de5f9d3eb3a8695da26ad35b57c16ce0e354114e6e962c4512afa",
+      "size_bytes": 300540,
+      "visual_result": "Saved 500; full table contains 50 rows, sequence 51 through 100; footer page 2/10."
+    }
+  ]
+}

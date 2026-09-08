@@ -1,0 +1,76 @@
+{
+  "code_sha": "7b71407bed03eda7a65e4e7803267fba956cd213",
+  "url": "http://127.0.0.1:5057/batches/2",
+  "isolated_root": "server-evidence-correction-20260908",
+  "batch_id": 2,
+  "capture_started_at_utc": "2026-09-08T02:02:04.651Z",
+  "capture_finished_at_utc": "2026-09-08T02:02:05.599Z",
+  "before": {
+    "failure_panel_hidden": false,
+    "failure_rows": [
+      {
+        "client_id": "62b31e01-85d5-4929-a022-835184b813fb",
+        "failure_id": "27",
+        "text": "synthetic-0080.jpg记录 #27 · 原大小 903.4 KiB网络连接中断，服务端结果未确认，请安全重传。上传此替换文件"
+      }
+    ],
+    "heading": "证据补拍：待同步明确替换终态",
+    "image_rows": [],
+    "message": "待同步的失败记录已由服务端确认。",
+    "stats": {
+      "completed": 0,
+      "failed": 0,
+      "pending": 0,
+      "processing": 0,
+      "queued": 0,
+      "total": 0
+    },
+    "unresolved_failures": 1,
+    "upload_counts": {
+      "confirmed": 0,
+      "failed": 1,
+      "retrying": 0,
+      "total": 1,
+      "uploading": 0,
+      "waiting": 0
+    }
+  },
+  "after": {
+    "failure_panel_hidden": false,
+    "failure_rows": [
+      {
+        "client_id": "62b31e01-85d5-4929-a022-835184b813fb",
+        "failure_id": "27",
+        "text": "synthetic-0080.jpg记录 #27 · 原大小 903.4 KiB网络连接中断，服务端结果未确认，请安全重传。上传此替换文件"
+      }
+    ],
+    "heading": "证据补拍：待同步明确替换终态",
+    "image_rows": [],
+    "message": "待同步的失败记录已由服务端确认。",
+    "stats": {
+      "completed": 0,
+      "failed": 0,
+      "pending": 0,
+      "processing": 0,
+      "queued": 0,
+      "total": 0
+    },
+    "unresolved_failures": 1,
+    "upload_counts": {
+      "confirmed": 0,
+      "failed": 1,
+      "retrying": 0,
+      "total": 1,
+      "uploading": 0,
+      "waiting": 0
+    }
+  },
+  "steps": [
+    "Create dedicated batch and select synthetic-0080.jpg",
+    "Enable upload/failure-write 503 fixture",
+    "Upload, observe pending=1, reload",
+    "Reset fixture; automatic bounded sync succeeds",
+    "Require saved failure row 27, saved images 0, unresolved 1",
+    "Capture stable unresolved state"
+  ]
+}

@@ -69,7 +69,7 @@ summary = {
     'synthetic_503_upload_times_batch2': [e['utc'] for e in events if e['kind']=='synthetic_503' and e['path']=='/batches/2/upload'],
     'limitations': ['Chrome memory includes unrelated existing tabs; no isolated renderer attribution.',
         'Response loss fixture suppresses committed success with 503; it is not a TCP response drop.',
-        'Screenshot 11 was captured before pagination settled; use screenshot 12 for the one-row second page.',
+        'Historical screenshots 11 and 12 do not show page 2; use issue4-evidence-correction-20260908/31-failures-page2.png with its separately timed DOM. Historical raw summaries remain unchanged.',
         'replacement-actions.json records only the final 18 replacements after browser runtime recovery; server events include all 26.']}
 if final:
     timing = json.loads((out / f'{prefix}_browser_timing.json').read_text(encoding='utf-8'))

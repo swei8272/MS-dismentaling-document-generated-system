@@ -1,0 +1,77 @@
+{
+  "code_sha": "7b71407bed03eda7a65e4e7803267fba956cd213",
+  "checkout_sha": "49a85633ffc454b7b2ed4bf1cc60c3c98799342f",
+  "capture_started_utc": "2026-09-08T02:07:04.921Z",
+  "capture_ended_utc": "2026-09-08T02:07:07.759Z",
+  "url": "http://127.0.0.1:5057/batches/2",
+  "isolated_root": "server-evidence-correction-20260908",
+  "batch_id": 2,
+  "before": {
+    "failure_panel_hidden": true,
+    "failure_rows": [],
+    "heading": "证据补拍：待同步明确替换终态",
+    "image_rows": [
+      [
+        "1",
+        "synthetic-0081.jpg",
+        "排队中",
+        "—"
+      ]
+    ],
+    "message": "本轮上传已结束；“服务端已确认”仅表示图片已保存，不表示 OCR 已完成。",
+    "stats": {
+      "completed": 0,
+      "failed": 0,
+      "pending": 0,
+      "processing": 0,
+      "queued": 1,
+      "total": 1
+    },
+    "unresolved_failures": 0,
+    "upload_counts": {
+      "confirmed": 1,
+      "failed": 0,
+      "retrying": 0,
+      "total": 1,
+      "uploading": 0,
+      "waiting": 0
+    }
+  },
+  "after": {
+    "failure_panel_hidden": true,
+    "failure_rows": [],
+    "heading": "证据补拍：待同步明确替换终态",
+    "image_rows": [
+      [
+        "1",
+        "synthetic-0081.jpg",
+        "排队中",
+        "—"
+      ]
+    ],
+    "message": "本轮上传已结束；“服务端已确认”仅表示图片已保存，不表示 OCR 已完成。",
+    "stats": {
+      "completed": 0,
+      "failed": 0,
+      "pending": 0,
+      "processing": 0,
+      "queued": 1,
+      "total": 1
+    },
+    "unresolved_failures": 0,
+    "upload_counts": {
+      "confirmed": 1,
+      "failed": 0,
+      "retrying": 0,
+      "total": 1,
+      "uploading": 0,
+      "waiting": 0
+    }
+  },
+  "steps": [
+    "上传 synthetic-0080.jpg 时启用隔离 outbox 故障",
+    "刷新，恢复隔离服务端；等待有限自动补写保存 failure ID 27",
+    "明确在 failure ID 27 行重新选择 synthetic-0081.jpg 并点击该行上传",
+    "等待服务端保存 1、未解决失败 0，定位标题后截图"
+  ]
+}

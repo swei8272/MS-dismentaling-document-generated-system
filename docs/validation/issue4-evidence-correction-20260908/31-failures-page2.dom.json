@@ -1,0 +1,43 @@
+{
+  "code_sha": "7b71407bed03eda7a65e4e7803267fba956cd213",
+  "checkout_sha": "49a85633ffc454b7b2ed4bf1cc60c3c98799342f",
+  "url": "http://127.0.0.1:5057/batches/1",
+  "isolated_root": "server-evidence-correction-20260908",
+  "batch_id": 1,
+  "capture_started_at_utc": "2026-09-08T01:59:32.660Z",
+  "capture_finished_at_utc": "2026-09-08T01:59:33.990Z",
+  "before": {
+    "failure_total": "26",
+    "heading": "证据补拍：26条失败分页",
+    "pagination": "上一页第 2 / 2 页下一页",
+    "rows": [
+      {
+        "client_id": "e79482a5-b12a-42ae-9c72-defa2cacacc0",
+        "failure_id": "1",
+        "text": "damaged-00.jpg记录 #1 · 原大小 0.0 KiB文件内容不是有效图片上传此替换文件"
+      }
+    ]
+  },
+  "after": {
+    "failure_total": 26,
+    "pagination": "上一页第 2 / 2 页下一页",
+    "rows": [
+      {
+        "client_id": "e79482a5-b12a-42ae-9c72-defa2cacacc0",
+        "failure_id": "1",
+        "text": "damaged-00.jpg记录 #1 · 原大小 0.0 KiB文件内容不是有效图片上传此替换文件"
+      }
+    ]
+  },
+  "dom_snapshot": "- banner:\n  - link \"铭深文件生成系统\":\n    - /url: /batches\n  - navigation:\n    - link \"批次管理\":\n      - /url: /batches\n- main:\n  - link \"← 返回批次列表\":\n    - /url: /batches\n  - heading \"证据补拍：26条失败分页\" [level=1]\n  - paragraph:\n    - text: 20260908-001 · 状态：\n    - generic: 已创建\n  - strong: \"0\"\n  - generic: 服务端已保存\n  - strong: \"0\"\n  - generic: OCR 排队\n  - strong: \"0\"\n  - generic: OCR 处理中\n  - strong: \"0\"\n  - generic: OCR 已完成\n  - strong: \"0\"\n  - generic: 待确认\n  - strong: \"0\"\n  - generic: OCR 失败\n  - heading \"分组上传图片\" [level=2]\n  - paragraph: 每组最多 25 张、文件净大小合计最多 64 MiB；单个文件最多 16 MiB。图片保存后只进入 OCR 队列，不代表识别完成。\n  - paragraph: 刷新后已保存结果会从服务端恢复；浏览器无法保留尚未确认的本地文件，请重新选择这些文件。重新选择整批图片是安全的，服务端会按内容去重。\n  - button \"Choose File\"\n  - button \"开始上传\"\n  - button \"重试失败/未确认\" [disabled]\n  - heading \"上传失败记录 26\" [level=2]\n  - paragraph: 这些记录属于文件传输或格式校验，不会创建 evidence，也不计入 OCR 失败。请在对应记录上明确选择替换文件；系统不会根据文件名或大小自动认定关联。\n  - strong: damaged-00.jpg\n  - generic: \"记录 #1 · 原大小 0.0 KiB\"\n  - generic: 文件内容不是有效图片\n  - button \"为失败记录 1 选择替换文件\"\n  - button \"上传此替换文件\" [disabled]\n  - button \"上一页\"\n  - generic: 第 2 / 2 页\n  - button \"下一页\" [disabled]\n  - heading \"批次图片\" [level=2]\n  - button \"更新图片列表\"\n  - generic: 这个批次还没有图片。",
+  "steps": [
+    "Create synthetic batch",
+    "Choose 26 damaged JPEG fixtures and upload",
+    "Reload after failure total reaches 26",
+    "Click failure pagination Next",
+    "Require page 2/2 and one row, wait 2 seconds",
+    "Click heading to bring content into viewport",
+    "Capture screenshot bracketed by DOM reads"
+  ],
+  "capture_note": "Initial fullPage capture timed out at CDP Page.captureScreenshot; no file created; viewport capture used."
+}

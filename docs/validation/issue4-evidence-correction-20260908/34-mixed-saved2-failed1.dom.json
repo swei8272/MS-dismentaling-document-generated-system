@@ -1,0 +1,100 @@
+{
+  "code_sha": "7b71407bed03eda7a65e4e7803267fba956cd213",
+  "checkout_sha": "49a85633ffc454b7b2ed4bf1cc60c3c98799342f",
+  "capture_started_utc": "2026-09-08T02:08:17.628Z",
+  "capture_ended_utc": "2026-09-08T02:08:20.739Z",
+  "url": "http://127.0.0.1:5057/batches/3",
+  "isolated_root": "server-evidence-correction-20260908",
+  "batch_id": 3,
+  "before": {
+    "failure_panel_hidden": false,
+    "failure_rows": [
+      {
+        "client_id": "f0e6cf28-3a79-4754-9bd3-b18c1cd029cc",
+        "failure_id": "28",
+        "text": "damaged-00.jpg记录 #28 · 原大小 0.0 KiB文件内容不是有效图片上传此替换文件"
+      }
+    ],
+    "heading": "证据补拍：混合损坏图替换终态",
+    "image_rows": [
+      [
+        "1",
+        "synthetic-0084.jpg",
+        "排队中",
+        "—"
+      ],
+      [
+        "2",
+        "synthetic-0085.jpg",
+        "排队中",
+        "—"
+      ]
+    ],
+    "message": "本轮上传已结束；“服务端已确认”仅表示图片已保存，不表示 OCR 已完成。",
+    "stats": {
+      "completed": 0,
+      "failed": 0,
+      "pending": 0,
+      "processing": 0,
+      "queued": 2,
+      "total": 2
+    },
+    "unresolved_failures": 1,
+    "upload_counts": {
+      "confirmed": 2,
+      "failed": 1,
+      "retrying": 0,
+      "total": 3,
+      "uploading": 0,
+      "waiting": 0
+    }
+  },
+  "after": {
+    "failure_panel_hidden": false,
+    "failure_rows": [
+      {
+        "client_id": "f0e6cf28-3a79-4754-9bd3-b18c1cd029cc",
+        "failure_id": "28",
+        "text": "damaged-00.jpg记录 #28 · 原大小 0.0 KiB文件内容不是有效图片上传此替换文件"
+      }
+    ],
+    "heading": "证据补拍：混合损坏图替换终态",
+    "image_rows": [
+      [
+        "1",
+        "synthetic-0084.jpg",
+        "排队中",
+        "—"
+      ],
+      [
+        "2",
+        "synthetic-0085.jpg",
+        "排队中",
+        "—"
+      ]
+    ],
+    "message": "本轮上传已结束；“服务端已确认”仅表示图片已保存，不表示 OCR 已完成。",
+    "stats": {
+      "completed": 0,
+      "failed": 0,
+      "pending": 0,
+      "processing": 0,
+      "queued": 2,
+      "total": 2
+    },
+    "unresolved_failures": 1,
+    "upload_counts": {
+      "confirmed": 2,
+      "failed": 1,
+      "retrying": 0,
+      "total": 3,
+      "uploading": 0,
+      "waiting": 0
+    }
+  },
+  "steps": [
+    "新建纯合成批次",
+    "浏览器文件选择器选择 synthetic-0084.jpg、damaged-00.jpg、synthetic-0085.jpg",
+    "点击开始上传，等待两张有效图保存，failure ID 28 未解决、OCR failed 0"
+  ]
+}

@@ -1,0 +1,25 @@
+✔ late page response never overwrites the newly selected page (1.6834ms)
+✔ polling coalesces but upload completion forces a fresh read (0.2397ms)
+✔ same-page response started before a forced refresh is never rendered (0.2109ms)
+✔ a force in the promise settlement gap starts a new image read (0.2703ms)
+✔ failed update preserves displayed rows and recovers on next poll (1.0354ms)
+✔ automatic refresh keeps current page and accepts server page clamping (0.2179ms)
+✔ batch badge follows confirmed server status and rejects unknown labels (2.6718ms)
+✔ groups are bounded by file count and byte total (0.3505ms)
+✔ status reads coalesce and a final force waits for one serial follow-up (0.9915ms)
+✔ a queued forced read still runs after an earlier read fails (0.2236ms)
+✔ a force in the promise settlement gap starts a new status read (0.5674ms)
+✔ refresh normalization keeps only metadata and never a File-like value (1.4113ms)
+✔ repeated offline enqueue and repeated acknowledgements are idempotent (0.3217ms)
+✔ already-confirmed acknowledgement clears a late pending failure (0.1359ms)
+✔ failure metadata sync has at most two automatic retries (1.1262ms)
+✔ bounded retry succeeds when connectivity returns (0.3164ms)
+✔ explicit retry reuses a restored outbox row by exact client id (0.1816ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 17
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 181.7648

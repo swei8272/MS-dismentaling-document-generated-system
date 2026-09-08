@@ -1,0 +1,17 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.5, pytest-8.4.2, pluggy-1.6.0
+rootdir: D:\Codes\DGM
+configfile: pytest.ini
+testpaths: tests
+collected 60 items
+
+tests\test_batch_images_refresh.py ...                                   [  5%]
+tests\test_batches_and_queue.py ..............                           [ 28%]
+tests\test_browser_harness.py ...                                        [ 33%]
+tests\test_migrations.py ......                                          [ 43%]
+tests\test_phase2_uploads.py .......................                     [ 81%]
+tests\test_phase2_validation_script.py ..                                [ 85%]
+tests\test_uploads_and_pages.py ........                                 [ 98%]
+tests\test_worker.py .                                                   [100%]
+
+======================= 60 passed in 134.17s (0:02:14) ========================
