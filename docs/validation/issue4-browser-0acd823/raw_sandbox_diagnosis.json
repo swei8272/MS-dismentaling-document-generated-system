@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "diagnostic_checkout_sha": "58178f3a04b74c5e8d215a9b3594394a188a63b1",
+  "program_code_sha": "0acd823e7e67684ae4fa9d50fa63aed5fd7f8629",
+  "cli_version": "0.153.4",
+  "desktop_package_version": "26.901.6511.0",
+  "binary_directory_id": "8e5b6932251c2c1c",
+  "windows_version": "10.0.19045.0",
+  "sandbox_mode": "workspace-write",
+  "source_log": "%CODEX_HOME%/.sandbox/sandbox.2026-09-07.log",
+  "undated_sandbox_log_exists": false,
+  "latest_reproduction": {
+    "time_utc": "2026-09-07T12:17:26.618664900Z",
+    "requested_command": "whoami",
+    "command_started": false,
+    "helper": "codex-windows-sandbox-setup.exe",
+    "operation": "deny ACE / SetNamedSecurityInfoW",
+    "target": "D:\\Codes\\DGM\\.git",
+    "win32_error": 5,
+    "win32_symbol": "ERROR_ACCESS_DENIED",
+    "win32_message": "Access is denied",
+    "helper_exit_code": 1,
+    "subsequent_read_acl_result": "read ACL run completed"
+  },
+  "identities": {
+    "observed_codex_parent": "LUIGIWIN\\swei",
+    "cache_read_grantee": "LUIGIWIN\\swei",
+    "parent_and_grantee_rid": 1001,
+    "offline_account": "LUIGIWIN\\CodexSandboxOffline",
+    "offline_rid": 1003,
+    "online_account": "LUIGIWIN\\CodexSandboxOnline",
+    "online_rid": 1004,
+    "cache_and_git_owner": "LUIGIWIN\\CodexSandboxOffline",
+    "actual_sandbox_child_identity": null,
+    "helper_token_directly_observed": false,
+    "limitation": "Setup failed before sandbox child launch; parent identity must not be reported as an observed sandbox child identity."
+  },
+  "cache_read_repair": {
+    "completed_in_prior_authorized_turn": true,
+    "readable_files_verified": 6,
+    "owner_preserved": true,
+    "is_logged_setup_failure_target": false
+  },
+  "proposed_change_not_executed": {
+    "target": "D:\\Codes\\DGM\\.git",
+    "principal": "LUIGIWIN\\swei",
+    "right": "WRITE_DAC / ChangePermissions / WDAC",
+    "scope": "directory itself only; no inheritance flags and no recursion",
+    "preserve_owner_and_existing_aces": true,
+    "purpose": "Allow the setup helper to install the sandbox protective deny ACE normally",
+    "requires_new_user_authorization": true
+  },
+  "safety": {
+    "secrets_read_or_output": false,
+    "acl_changes_this_turn": false,
+    "recursive_acl_reset": false,
+    "sandbox_disabled": false,
+    "production_data_accessed": false
+  },
+  "browser_acceptance": "incomplete; no new browser interaction, screenshot, upload, or browser memory evidence"
+}

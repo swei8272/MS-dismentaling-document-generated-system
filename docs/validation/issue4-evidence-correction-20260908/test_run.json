@@ -1,0 +1,40 @@
+{
+  "application_code_sha": "7b71407bed03eda7a65e4e7803267fba956cd213",
+  "checkout_sha": "49a85633ffc454b7b2ed4bf1cc60c3c98799342f",
+  "historical_output_status": "No archived complete stdout/stderr files found; this is a new run, not a historical transcript.",
+  "runs": [
+    {
+      "name": "pytest",
+      "command": [
+        ".venv/Scripts/python.exe",
+        "-m",
+        "pytest",
+        "-p",
+        "no:cacheprovider",
+        "--basetemp",
+        ".pytest-tmp-evidence-20260908T015527Z"
+      ],
+      "started_at_utc": "2026-09-08T01:55:27.870822+00:00",
+      "stdout": "pytest.stdout.txt",
+      "stderr": "pytest.stderr.txt",
+      "exit_code": 0,
+      "duration_seconds": 141.495,
+      "ended_at_utc": "2026-09-08T01:57:49.364734+00:00"
+    },
+    {
+      "name": "javascript",
+      "command": [
+        "node",
+        "--test",
+        "tests/js/batch_upload_state.test.js",
+        "tests/js/batch_images.test.js"
+      ],
+      "started_at_utc": "2026-09-08T01:57:49.364832+00:00",
+      "stdout": "javascript.stdout.txt",
+      "stderr": "javascript.stderr.txt",
+      "exit_code": 0,
+      "duration_seconds": 0.373,
+      "ended_at_utc": "2026-09-08T01:57:49.737984+00:00"
+    }
+  ]
+}

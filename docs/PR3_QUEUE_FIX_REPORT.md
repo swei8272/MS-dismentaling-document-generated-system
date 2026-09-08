@@ -22,6 +22,14 @@
 车辆字段写入也必须与领取版本校验放在同一个事务中，不能先写结果再校验。
 本次仅在隔离的临时数据库中验证，未接触真实车辆资料。
 
+## 合并前 Windows 最终验证
+
+2026-09-05 在 Windows / Python 3.13.5 对提交
+`02bf0675dd2b363dd3e7cd68e7d69571ce2c52a5` 完成最终复测：27 passed in
+2.40s，compileall、pip check、diff 检查和 Waitress 批次页面 HTTP 200 均通过。
+该结果覆盖下方较早的 Linux 环境说明和修复前 18 passed。完整记录见
+[PR #3 本机跟进验证](https://github.com/swei8272/MS-dismentaling-document-generated-system/pull/3#issuecomment-5549583461)。
+
 ## 本次验证
 
 环境：Linux / Python 3.12.13。

@@ -1,0 +1,60 @@
+{
+  "validation_commit_sha": "f0e72dabcf0f8c8a02bd28ffb1fc2456d1600779",
+  "batch_id": 2,
+  "simulated": "mid_request_disconnect_then_retry",
+  "initial_results": [
+    {
+      "client_id": "mixed-good-a",
+      "evidence_id": 1,
+      "message": "已复用全局图片记录。",
+      "name": "synthetic-0000.jpg",
+      "processing_status": "queued",
+      "retryable": false,
+      "status": "reused"
+    },
+    {
+      "client_id": "mixed-damaged",
+      "failure_id": 1,
+      "message": "文件内容不是有效图片",
+      "name": "damaged-synthetic.jpg",
+      "retryable": false,
+      "status": "failed"
+    },
+    {
+      "client_id": "mixed-good-b",
+      "evidence_id": 2,
+      "message": "已复用全局图片记录。",
+      "name": "synthetic-0001.jpg",
+      "processing_status": "queued",
+      "retryable": false,
+      "status": "reused"
+    }
+  ],
+  "retry_results": [
+    {
+      "client_id": "mixed-damaged",
+      "evidence_id": 3,
+      "message": "已复用全局图片记录。",
+      "name": "synthetic-0002.jpg",
+      "processing_status": "queued",
+      "retryable": false,
+      "status": "reused"
+    }
+  ],
+  "final_batch": {
+    "batch_no": "20260907-002",
+    "completed": 0,
+    "completed_at": null,
+    "created_at": "2026-09-07T01:47:06+00:00",
+    "failed": 0,
+    "id": 2,
+    "name": "第二阶段 500 张合成图片验证",
+    "pending": 0,
+    "processing": 0,
+    "queued": 3,
+    "status": "queued",
+    "total": 3,
+    "updated_at": "2026-09-07T01:47:09+00:00"
+  },
+  "final_upload_failure_count": 0
+}

@@ -1,0 +1,27 @@
+{
+  "validation_commit_sha": "e54f7bb43caf9d59581f2ab0216c26039b08a865",
+  "application_code_sha": "0acd823e7e67684ae4fa9d50fa63aed5fd7f8629",
+  "local_date": "2026-09-08",
+  "pytest": {
+    "command": ".venv\\Scripts\\python.exe -m pytest -p no:cacheprovider --basetemp .pytest-tmp-browser-20260908-delivery",
+    "passed": 59,
+    "failed": 0,
+    "seconds": 60.86,
+    "original_39_preserved": true,
+    "migration_tests": 6,
+    "new_harness_tests": 3
+  },
+  "javascript": {
+    "command": "node --test tests/js/batch_upload_state.test.js tests/js/batch_images.test.js",
+    "passed": 16,
+    "failed": 0
+  },
+  "python_compileall": "passed: app.py config.py database.py storage.py worker.py scripts tests and evidence summarizer",
+  "javascript_syntax": "passed: batch_upload.js, batch_upload_state.js, batch_images.js",
+  "pip_check": "No broken requirements found.",
+  "git_diff_check": "passed",
+  "waitress_windows_startup": "Real Chrome created batches and uploaded synthetic images on loopback ports 5057 and 5058",
+  "database_migrations_added_this_round": 0,
+  "real_business_data_accessed": false,
+  "phase_3_implemented": false
+}

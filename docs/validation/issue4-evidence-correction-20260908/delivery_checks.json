@@ -1,0 +1,110 @@
+{
+  "evidence_assertions": "passed",
+  "runs": [
+    {
+      "command": [
+        "<repo>\\.venv\\Scripts\\python.exe",
+        "-m",
+        "compileall",
+        "-q",
+        "app.py",
+        "config.py",
+        "database.py",
+        "storage.py",
+        "worker.py",
+        "scripts",
+        "tests",
+        "<repo>\\docs\\validation\\issue4-evidence-correction-20260908"
+      ],
+      "started_at_utc": "2026-09-08T02:17:45.358918+00:00",
+      "ended_at_utc": "2026-09-08T02:17:47.214699+00:00",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "node",
+        "--check",
+        "static/batch_upload.js"
+      ],
+      "started_at_utc": "2026-09-08T02:17:47.214714+00:00",
+      "ended_at_utc": "2026-09-08T02:17:47.318659+00:00",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "node",
+        "--check",
+        "static/batch_upload_state.js"
+      ],
+      "started_at_utc": "2026-09-08T02:17:47.318678+00:00",
+      "ended_at_utc": "2026-09-08T02:17:47.408516+00:00",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "node",
+        "--check",
+        "static/batch_images.js"
+      ],
+      "started_at_utc": "2026-09-08T02:17:47.408532+00:00",
+      "ended_at_utc": "2026-09-08T02:17:47.483205+00:00",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "<repo>\\.venv\\Scripts\\python.exe",
+        "-m",
+        "pip",
+        "check"
+      ],
+      "started_at_utc": "2026-09-08T02:17:47.483230+00:00",
+      "ended_at_utc": "2026-09-08T02:17:56.503901+00:00",
+      "exit_code": 0,
+      "stdout": "No broken requirements found.\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "started_at_utc": "2026-09-08T02:17:56.503916+00:00",
+      "ended_at_utc": "2026-09-08T02:17:56.547352+00:00",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "warning: in the working copy of 'docs/PHASE_2_BROWSER_ACCEPTANCE.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'docs/PHASE_2_VALIDATION_REPORT.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'docs/validation/issue4-browser-20260908/README.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'docs/validation/issue4-browser-20260908/summarize.py', LF will be replaced by CRLF the next time Git touches it\n"
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--exit-code",
+        "7b71407",
+        "--",
+        "app.py",
+        "config.py",
+        "database.py",
+        "storage.py",
+        "worker.py",
+        "static",
+        "templates",
+        "scripts",
+        "tests"
+      ],
+      "started_at_utc": "2026-09-08T02:17:56.547368+00:00",
+      "ended_at_utc": "2026-09-08T02:17:56.584055+00:00",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ]
+}

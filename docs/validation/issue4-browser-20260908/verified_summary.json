@@ -1,0 +1,190 @@
+{
+  "validation_commit_sha": "7b71407bed03eda7a65e4e7803267fba956cd213",
+  "production_code_sha": "7b71407bed03eda7a65e4e7803267fba956cd213",
+  "generated_at_utc": "2026-09-07T23:31:05.105904+00:00",
+  "browser": "Chrome 152.0.7977.82, real extension file chooser and page buttons",
+  "upload_500": {
+    "window_definition": "server observed first request start through last response end; not browser click-to-render timing",
+    "started_at_utc": "2026-09-07T23:30:28.911463+00:00",
+    "ended_at_utc": "2026-09-07T23:30:40.517436+00:00",
+    "duration_seconds": 11.605973,
+    "groups": 20,
+    "max_active_uploads": 1,
+    "files_per_group": [
+      25,
+      25,
+      25,
+      25,
+      25,
+      25,
+      25,
+      25,
+      25,
+      25,
+      25,
+      25,
+      25,
+      25,
+      25,
+      25,
+      25,
+      25,
+      25,
+      25
+    ],
+    "net_bytes_per_group": [
+      21186704,
+      21752493,
+      22325317,
+      21812857,
+      21794482,
+      22471735,
+      21783016,
+      21578560,
+      22000093,
+      22153650,
+      21813727,
+      22186575,
+      22069397,
+      21470332,
+      21936043,
+      22326570,
+      21645193,
+      22191819,
+      22060678,
+      21514851
+    ],
+    "total_bytes": 438074092,
+    "result_counts": {
+      "added": 500
+    },
+    "monitor_seconds_before_upload": 38.932463,
+    "monitor_seconds_after_upload": 22.505564,
+    "upload_window_status_sample_count": 12,
+    "upload_window_status_p95_ms": 53.664,
+    "upload_window_status_max_ms": 53.664,
+    "upload_window_http_failures": 0
+  },
+  "browser_memory": {
+    "scope": "All Chrome processes, including pre-existing unrelated tabs and extension processes; not isolated tab memory",
+    "method": "Windows Get-Process chrome WorkingSet64 and PrivateMemorySize64, summed across all Chrome processes each second",
+    "sample_count": 57,
+    "first": {
+      "utc": "2026-09-07T23:30:05.4410947Z",
+      "process_count": 30,
+      "total_working_set_bytes": 4088967168,
+      "total_private_bytes": 4218023936
+    },
+    "last": {
+      "utc": "2026-09-07T23:31:02.2249537Z",
+      "process_count": 30,
+      "total_working_set_bytes": 4033339392,
+      "total_private_bytes": 4092055552
+    },
+    "sampled_working_set_max_bytes": 4173008896,
+    "sampled_private_max_bytes": 4288307200
+  },
+  "database_final": {
+    "batches": [
+      {
+        "batch_id": 1,
+        "batch_images": 500,
+        "receipts": 500,
+        "unresolved_failures": 0,
+        "resolved_failures": 0
+      }
+    ],
+    "global_evidence": 500,
+    "unique_sha256": 500,
+    "evidence_status": {
+      "queued": 500
+    },
+    "max_attempt_count": 0,
+    "foreign_key_errors": []
+  },
+  "disk_final": {
+    "formal_files": 500,
+    "incoming_files": 0
+  },
+  "boundary_requests": [],
+  "synthetic_503_upload_times_batch2": [],
+  "limitations": [
+    "Browser timing includes control dispatch and up to approximately one second confirmation observation interval.",
+    "Chrome memory includes unrelated existing tabs and extension processes; no isolated renderer attribution.",
+    "GetProcessMemoryInfo lifetime high-water mark includes process time before this upload. No tracemalloc was enabled."
+  ],
+  "browser_timing": {
+    "validation_commit_sha": "7b71407bed03eda7a65e4e7803267fba956cd213",
+    "click_requested_utc": "2026-09-07T23:30:25.886Z",
+    "observations": [
+      {
+        "utc": "2026-09-07T23:30:28.831Z",
+        "confirmed": 0,
+        "badge": "已创建"
+      },
+      {
+        "utc": "2026-09-07T23:30:29.857Z",
+        "confirmed": 25,
+        "badge": "排队中"
+      },
+      {
+        "utc": "2026-09-07T23:30:30.882Z",
+        "confirmed": 75,
+        "badge": "排队中"
+      },
+      {
+        "utc": "2026-09-07T23:30:31.898Z",
+        "confirmed": 125,
+        "badge": "排队中"
+      },
+      {
+        "utc": "2026-09-07T23:30:32.922Z",
+        "confirmed": 175,
+        "badge": "排队中"
+      },
+      {
+        "utc": "2026-09-07T23:30:33.949Z",
+        "confirmed": 200,
+        "badge": "排队中"
+      },
+      {
+        "utc": "2026-09-07T23:30:34.965Z",
+        "confirmed": 250,
+        "badge": "排队中"
+      },
+      {
+        "utc": "2026-09-07T23:30:35.987Z",
+        "confirmed": 300,
+        "badge": "排队中"
+      },
+      {
+        "utc": "2026-09-07T23:30:37.007Z",
+        "confirmed": 325,
+        "badge": "排队中"
+      },
+      {
+        "utc": "2026-09-07T23:30:38.019Z",
+        "confirmed": 375,
+        "badge": "排队中"
+      },
+      {
+        "utc": "2026-09-07T23:30:39.032Z",
+        "confirmed": 425,
+        "badge": "排队中"
+      },
+      {
+        "utc": "2026-09-07T23:30:40.056Z",
+        "confirmed": 475,
+        "badge": "排队中"
+      },
+      {
+        "utc": "2026-09-07T23:30:41.073Z",
+        "confirmed": 500,
+        "badge": "排队中"
+      }
+    ],
+    "click_returned_utc": "2026-09-07T23:30:28.823Z",
+    "confirmed_500_observed_utc": "2026-09-07T23:30:41.076Z",
+    "click_request_to_confirmed_observation_seconds": 15.19
+  }
+}

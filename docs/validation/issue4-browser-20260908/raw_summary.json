@@ -1,0 +1,178 @@
+{
+  "validation_commit_sha": "e54f7bb43caf9d59581f2ab0216c26039b08a865",
+  "production_code_sha": "0acd823e7e67684ae4fa9d50fa63aed5fd7f8629",
+  "generated_at_utc": "2026-09-07T23:24:57.483367+00:00",
+  "browser": "Chrome 152.0.7977.82, real extension file chooser and page buttons",
+  "upload_500": {
+    "window_definition": "server observed first request start through last response end; not browser click-to-render timing",
+    "started_at_utc": "2026-09-07T22:56:54.833280+00:00",
+    "ended_at_utc": "2026-09-07T22:57:09.215522+00:00",
+    "duration_seconds": 14.382242,
+    "groups": 20,
+    "max_active_uploads": 1,
+    "files_per_group": [
+      25,
+      25,
+      25,
+      25,
+      25,
+      25,
+      25,
+      25,
+      25,
+      25,
+      25,
+      25,
+      25,
+      25,
+      25,
+      25,
+      25,
+      25,
+      25,
+      25
+    ],
+    "net_bytes_per_group": [
+      21186704,
+      21752493,
+      22325317,
+      21812857,
+      21794482,
+      22471735,
+      21783016,
+      21578560,
+      22000093,
+      22153650,
+      21813727,
+      22186575,
+      22069397,
+      21470332,
+      21936043,
+      22326570,
+      21645193,
+      22191819,
+      22060678,
+      21514851
+    ],
+    "total_bytes": 438074092,
+    "result_counts": {
+      "reused": 80,
+      "added": 420
+    },
+    "monitor_seconds_before_upload": 34.54228,
+    "monitor_seconds_after_upload": 38.130478,
+    "upload_window_status_sample_count": 14,
+    "upload_window_status_p95_ms": 35.833,
+    "upload_window_status_max_ms": 35.833,
+    "upload_window_http_failures": 0
+  },
+  "browser_memory": {
+    "scope": "All Chrome processes, including pre-existing unrelated tabs and extension processes; not isolated tab memory",
+    "method": "Windows Get-Process chrome WorkingSet64 and PrivateMemorySize64, summed across all Chrome processes each second",
+    "sample_count": 82,
+    "first": {
+      "utc": "2026-09-07T22:56:24.7987784Z",
+      "process_count": 29,
+      "total_working_set_bytes": 4030476288,
+      "total_private_bytes": 4645203968
+    },
+    "last": {
+      "utc": "2026-09-07T22:57:46.7406609Z",
+      "process_count": 28,
+      "total_working_set_bytes": 4052455424,
+      "total_private_bytes": 4054589440
+    },
+    "sampled_working_set_max_bytes": 4076687360,
+    "sampled_private_max_bytes": 4815183872
+  },
+  "database_final": {
+    "batches": [
+      {
+        "batch_id": 1,
+        "batch_images": 53,
+        "receipts": 53,
+        "unresolved_failures": 0,
+        "resolved_failures": 0
+      },
+      {
+        "batch_id": 2,
+        "batch_images": 28,
+        "receipts": 28,
+        "unresolved_failures": 0,
+        "resolved_failures": 25
+      },
+      {
+        "batch_id": 3,
+        "batch_images": 500,
+        "receipts": 500,
+        "unresolved_failures": 0,
+        "resolved_failures": 0
+      },
+      {
+        "batch_id": 4,
+        "batch_images": 8,
+        "receipts": 8,
+        "unresolved_failures": 0,
+        "resolved_failures": 1
+      },
+      {
+        "batch_id": 5,
+        "batch_images": 26,
+        "receipts": 26,
+        "unresolved_failures": 0,
+        "resolved_failures": 26
+      },
+      {
+        "batch_id": 6,
+        "batch_images": 2,
+        "receipts": 2,
+        "unresolved_failures": 0,
+        "resolved_failures": 2
+      },
+      {
+        "batch_id": 7,
+        "batch_images": 3,
+        "receipts": 3,
+        "unresolved_failures": 0,
+        "resolved_failures": 1
+      }
+    ],
+    "global_evidence": 505,
+    "unique_sha256": 505,
+    "evidence_status": {
+      "completed": 28,
+      "queued": 477
+    },
+    "max_attempt_count": 0,
+    "foreign_key_errors": []
+  },
+  "disk_final": {
+    "formal_files": 505,
+    "incoming_files": 0
+  },
+  "boundary_requests": [
+    {
+      "files": 4,
+      "net_bytes": 63480216
+    },
+    {
+      "files": 3,
+      "net_bytes": 17493355
+    },
+    {
+      "files": 1,
+      "net_bytes": 770629
+    }
+  ],
+  "synthetic_503_upload_times_batch2": [
+    "2026-09-07T22:54:13.337376+00:00",
+    "2026-09-07T22:54:13.998511+00:00",
+    "2026-09-07T22:54:15.141263+00:00"
+  ],
+  "limitations": [
+    "Chrome memory includes unrelated existing tabs; no isolated renderer attribution.",
+    "Response loss fixture suppresses committed success with 503; it is not a TCP response drop.",
+    "Screenshot 11 was captured before pagination settled; use screenshot 12 for the one-row second page.",
+    "replacement-actions.json records only the final 18 replacements after browser runtime recovery; server events include all 26."
+  ]
+}

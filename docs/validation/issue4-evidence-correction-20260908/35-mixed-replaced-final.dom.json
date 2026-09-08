@@ -1,0 +1,102 @@
+{
+  "code_sha": "7b71407bed03eda7a65e4e7803267fba956cd213",
+  "checkout_sha": "49a85633ffc454b7b2ed4bf1cc60c3c98799342f",
+  "capture_started_utc": "2026-09-08T02:09:14.181Z",
+  "capture_ended_utc": "2026-09-08T02:09:18.358Z",
+  "url": "http://127.0.0.1:5057/batches/3",
+  "isolated_root": "server-evidence-correction-20260908",
+  "batch_id": 3,
+  "before": {
+    "failure_panel_hidden": true,
+    "failure_rows": [],
+    "heading": "证据补拍：混合损坏图替换终态",
+    "image_rows": [
+      [
+        "1",
+        "synthetic-0084.jpg",
+        "排队中",
+        "—"
+      ],
+      [
+        "2",
+        "synthetic-0085.jpg",
+        "排队中",
+        "—"
+      ],
+      [
+        "3",
+        "synthetic-0086.jpg",
+        "排队中",
+        "—"
+      ]
+    ],
+    "message": "本轮上传已结束；“服务端已确认”仅表示图片已保存，不表示 OCR 已完成。",
+    "stats": {
+      "completed": 0,
+      "failed": 0,
+      "pending": 0,
+      "processing": 0,
+      "queued": 3,
+      "total": 3
+    },
+    "unresolved_failures": 0,
+    "upload_counts": {
+      "confirmed": 3,
+      "failed": 0,
+      "retrying": 0,
+      "total": 3,
+      "uploading": 0,
+      "waiting": 0
+    }
+  },
+  "after": {
+    "failure_panel_hidden": true,
+    "failure_rows": [],
+    "heading": "证据补拍：混合损坏图替换终态",
+    "image_rows": [
+      [
+        "1",
+        "synthetic-0084.jpg",
+        "排队中",
+        "—"
+      ],
+      [
+        "2",
+        "synthetic-0085.jpg",
+        "排队中",
+        "—"
+      ],
+      [
+        "3",
+        "synthetic-0086.jpg",
+        "排队中",
+        "—"
+      ]
+    ],
+    "message": "本轮上传已结束；“服务端已确认”仅表示图片已保存，不表示 OCR 已完成。",
+    "stats": {
+      "completed": 0,
+      "failed": 0,
+      "pending": 0,
+      "processing": 0,
+      "queued": 3,
+      "total": 3
+    },
+    "unresolved_failures": 0,
+    "upload_counts": {
+      "confirmed": 3,
+      "failed": 0,
+      "retrying": 0,
+      "total": 3,
+      "uploading": 0,
+      "waiting": 0
+    }
+  },
+  "steps": [
+    "截图34的混合组保存2、failure ID 28未解决",
+    "明确通过 failure ID 28 的独立文件选择器选择 synthetic-0086.jpg",
+    "点击上传此替换文件；只上传该1张，原2张不重新选择",
+    "等待保存3、未解决上传失败0、OCR failed0、表格3行后定位标题并截图"
+  ],
+  "zero_failure_display": "未解决为0时整个失败面板按应用原设计隐藏；截图同时可见本轮失败/未确认0，服务端未解决0由截图前后DOM证明。"
+}

@@ -1,0 +1,101 @@
+{
+  "validation_commit_sha": "0acd823e7e67684ae4fa9d50fa63aed5fd7f8629",
+  "environment": {
+    "platform": "Windows-10-10.0.19045-SP0",
+    "python": "3.13.5 | packaged by Anaconda, Inc. | (main, Jun 12 2025, 16:37:03) [MSC v.1929 64 bit (AMD64)]",
+    "server": "Waitress",
+    "uploader": "Python HTTP validation client (not browser memory)"
+  },
+  "batch_id": 3,
+  "upload_window": {
+    "started_at_utc": "2026-09-07T06:27:52.346+00:00",
+    "ended_at_utc": "2026-09-07T06:28:03.696+00:00",
+    "elapsed_seconds": 11.35
+  },
+  "image_inventory": {
+    "count": 51,
+    "unique_sha256": 51,
+    "dimensions": [
+      [
+        1600,
+        1200
+      ]
+    ],
+    "minimum_bytes": 745791,
+    "maximum_bytes": 961307,
+    "average_bytes": 860366,
+    "total_bytes": 43878682
+  },
+  "grouping": {
+    "group_max_files": 25,
+    "group_max_bytes": 67108864,
+    "file_max_bytes": 16777216,
+    "group_count": 3,
+    "concurrent_requests": 1
+  },
+  "observed_result_counts": {
+    "added": 0,
+    "reused": 50,
+    "already_in_batch": 1,
+    "failed": 0
+  },
+  "server_batch": {
+    "batch_no": "20260907-003",
+    "completed": 0,
+    "completed_at": null,
+    "created_at": "2026-09-07T06:27:52+00:00",
+    "failed": 0,
+    "id": 3,
+    "name": "第二阶段 500 张合成图片验证",
+    "pending": 0,
+    "processing": 0,
+    "queued": 51,
+    "status": "queued",
+    "total": 51,
+    "updated_at": "2026-09-07T06:28:03+00:00"
+  },
+  "upload_failure_count": 0,
+  "storage_summary_http_status": 200,
+  "storage_summary": {
+    "batch_image_count": 51,
+    "disk_file_count": 500,
+    "evidence_count": 500,
+    "unique_sha256_count": 500,
+    "unresolved_failure_count": 0,
+    "upload_receipt_count": 51
+  },
+  "python_uploader_traced_peak_bytes": 64797688,
+  "browser_memory": null,
+  "group_results": [
+    {
+      "group": 1,
+      "files": 25,
+      "payload_bytes": 21202592,
+      "elapsed_seconds": 3.945,
+      "simulated": null,
+      "statuses": {
+        "reused": 25
+      }
+    },
+    {
+      "group": 2,
+      "files": 25,
+      "payload_bytes": 21767608,
+      "elapsed_seconds": 3.859,
+      "simulated": "mid_request_disconnect_then_retry",
+      "statuses": {
+        "reused": 25
+      }
+    },
+    {
+      "group": 3,
+      "files": 1,
+      "payload_bytes": 934630,
+      "elapsed_seconds": 0.237,
+      "simulated": "response_lost_then_retry",
+      "statuses": {
+        "already_in_batch": 1
+      }
+    }
+  ]
+}

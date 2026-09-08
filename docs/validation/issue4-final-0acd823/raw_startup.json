@@ -1,0 +1,17 @@
+{
+  "validation_commit_sha": "0acd823e7e67684ae4fa9d50fa63aed5fd7f8629",
+  "environment": {
+    "platform": "Windows 10 10.0.19045 SP0",
+    "python": "3.13.5",
+    "server": "Waitress 3.0.2",
+    "threads": 8
+  },
+  "command": ".venv\\Scripts\\python.exe scripts\\phase2_validation.py serve .phase2-validation-0acd823-20260907-162512\\server --port 5056",
+  "data_scope": "fresh isolated synthetic validation root",
+  "http_status": 200,
+  "title_found": true,
+  "server_pid": 1536,
+  "server_stopped_after_validation": true,
+  "port_5056_listeners_after_stop": 0,
+  "production_data_accessed": false
+}
